@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/mcp-config.json",
+  "mcpServers": {
+    "supabase-mcp-server": {
+      "command": "node",
+      "args": [
+        "./supabase-mcp-server/dist/index.js"
+      ],
+      "env": {}
+    },
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@chrome-devtools/mcp-server"
+      ]
+    }
+  }
+}

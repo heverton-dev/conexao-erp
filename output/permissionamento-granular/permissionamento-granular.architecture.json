@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Permissionamento Granular - ERP Odonto",
+    "subtitle": "Duas camadas: permissoes + modulos_acesso",
+    "output": "permissionamento-granular.html"
+  },
+  "components": [
+    {
+      "id": "login",
+      "type": "external",
+      "label": "Usuario",
+      "sublabel": "Login",
+      "pos": [40, 280]
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "Supabase Auth",
+      "sublabel": "onAuthStateChange",
+      "pos": [240, 280]
+    },
+    {
+      "id": "provider",
+      "type": "frontend",
+      "label": "AuthProvider",
+      "sublabel": "fetchProfile()",
+      "pos": [440, 280]
+    },
+    {
+      "id": "permissoes",
+      "type": "database",
+      "label": "permissoes",
+      "sublabel": "chave/boolean",
+      "pos": [440, 100]
+    },
+    {
+      "id": "modulos",
+      "type": "database",
+      "label": "modulos_acesso",
+      "sublabel": "acessar/paginas",
+      "pos": [440, 460]
+    },
+    {
+      "id": "registry",
+      "type": "backend",
+      "label": "Registry",
+      "sublabel": "Map global",
+      "pos": [640, 280]
+    },
+    {
+      "id": "guards",
+      "type": "security",
+      "label": "Guards",
+      "sublabel": "RequirePermission",
+      "pos": [820, 180]
+    },
+    {
+      "id": "ui",
+      "type": "frontend",
+      "label": "UI / Rotas",
+      "sublabel": "Botoes + Nav",
+      "pos": [820, 400]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "security-group",
+      "label": "Frontend React",
+      "wraps": ["provider", "registry", "guards", "ui"]
+    }
+  ],
+  "connections": [
+    {
+      "from": "login",
+      "to": "auth",
+      "label": "credenciais",
+      "variant": "emphasis",
+      "labelAt": [180, 276]
+    },
+    {
+      "from": "auth",
+      "to": "provider",
+      "label": "profile",
+      "variant": "emphasis",
+      "labelAt": [380, 276]
+    },
+    {
+      "from": "provider",
+      "to": "permissoes",
+      "label": "carrega",
+      "variant": "default",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelAt": [500, 256]
+    },
+    {
+      "from": "provider",
+      "to": "modulos",
+      "label": "carrega",
+      "variant": "default",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [500, 364]
+    },
+    {
+      "from": "permissoes",
+      "to": "registry",
+      "label": "flatPerms",
+      "variant": "emphasis",
+      "labelAt": [600, 156]
+    },
+    {
+      "from": "modulos",
+      "to": "registry",
+      "label": "setup()",
+      "variant": "emphasis",
+      "labelAt": [600, 444]
+    },
+    {
+      "from": "registry",
+      "to": "guards",
+      "label": "permissoes",
+      "variant": "emphasis",
+      "labelAt": [760, 256]
+    },
+    {
+      "from": "registry",
+      "to": "ui",
+      "label": "navItems",
+      "variant": "default",
+      "labelAt": [760, 364]
+    },
+    {
+      "from": "guards",
+      "to": "ui",
+      "label": "allow/deny",
+      "variant": "security",
+      "labelAt": [880, 334]
+    }
+  ],
+  "cards": [
+    {
+      "title": "Verificacao",
+      "dot": "amber",
+      "items": [
+        "is_super_admin? -> TUDO",
+        "modulosAcesso.acessar?",
+        "permissoes[chave] === true",
+        "Falha? -> redirect"
+      ]
+    }
+  ]
+}

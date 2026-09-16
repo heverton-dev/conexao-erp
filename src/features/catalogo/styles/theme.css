@@ -1,0 +1,42 @@
+.catalogo-theme {
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-hover: #334155;
+  --color-card: #1e293b;
+
+  --color-text-main: #f8fafc;
+  --color-text-muted: #94a3b8;
+  --color-text-inverted: #0f172a;
+
+  --color-border: transparent;
+  --color-border-subtle: #1e293b;
+
+  --color-accent: #c9a655;
+  --color-accent-hover: #d4b366;
+  --color-accent-fg: #0f172a;
+  --color-accent-muted: rgba(201, 166, 85, 0.12);
+
+  --color-success: #22c55e;
+  --color-success-bg: rgba(34, 197, 94, 0.08);
+  --color-error: #ef4444;
+  --color-error-bg: rgba(239, 68, 68, 0.08);
+
+  --color-input-bg: #0f172a;
+  --color-input-border: #334155;
+  --color-input-focus: #c9a655;
+
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  min-height: 100vh;
+}
+
+.catalogo-theme .bg-gradient-gold {
+  background: linear-gradient(135deg, #c9a655 0%, #e8d48b 40%, #a8873a 70%, #c9a655 100%);
+}
+
+.catalogo-theme .text-gradient-gold {
+  background: linear-gradient(135deg, #c9a655 0%, #e8d48b 40%, #a8873a 70%, #c9a655 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

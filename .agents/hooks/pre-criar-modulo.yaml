@@ -1,0 +1,17 @@
+name: pre-criar-modulo
+description: Valida antes de criar módulo
+trigger: antes_de_executar: criar-modulo
+actions:
+  - validar_nome:
+      pattern: '^[a-z0-9-]+$'
+      message: 'Nome deve ser kebab-case'
+      on_error: abort
+
+  - verificar_existencia:
+      glob: 'src/features/$nome/**'
+      on_error: abort
+
+  - verificar_registro:
+      file: src/registry/modules.ts
+      pattern: $nome
+      on_error: abort

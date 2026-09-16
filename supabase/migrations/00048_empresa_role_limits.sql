@@ -1,0 +1,6 @@
+-- ============================================================
+-- 00048_empresa_role_limits.sql
+-- (DEPRECATED - replaced by 00049_empresa_modulo_limits.sql)
+-- Este arquivo foi mantido apenas para historico.
+-- A tabela empresa_role_limits foi removida na migration 00049.
+-- ============================================================

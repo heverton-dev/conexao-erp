@@ -1,0 +1,2924 @@
+// ============================================================
+// ERP Conexão — Prisma Schema (Refatoração Completa)
+// ============================================================
+// Base: ~92 tabelas SQL → Schema normalizado
+// Multi-tenant: empresa_id em toda tabela de dados
+// Auth: Supabase Auth (auth.users) — FK referenciada indiretamente
+// ============================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum UserRole {
+  admin
+  editor
+  viewer
+}
+
+enum UserTipo {
+  super_admin
+  admin
+  colaborador
+  parceiro
+  cliente
+}
+
+enum Ambiente {
+  cadastro
+  consultor
+  tecnologia
+  ambos
+  suporte
+}
+
+enum TipoPessoa {
+  PF
+  PJ
+}
+
+enum CadastroStatus {
+  link_gerado
+  dados_enviados
+  em_analise
+  em_correcao
+  aprovado
+  reprovado
+}
+
+enum TipoAcao {
+  solicitar_cadastro
+  atualizar_cadastro
+}
+
+enum FormaCompartilhamento {
+  whatsapp
+  email
+  copiar
+}
+
+enum HubAppRole {
+  client
+  distributor
+  consultant
+  manager
+  super_admin
+}
+
+enum HubMaterialType {
+  image
+  pdf
+  video
+  audio
+  html
+}
+
+enum HubTranslationStatus {
+  draft
+  review
+  published
+}
+
+enum HubProgressStatus {
+  started
+  completed
+}
+
+enum HubBadgeTrigger {
+  material_completed
+  collection_completed
+  points_reached
+  streak_days
+  ranking_position
+  login_count
+}
+
+enum HubAppLanguage {
+  pt_br
+  en_us
+  es_es
+}
+
+enum MapasDistCategory {
+  EXCLUSIVE
+  NON_EXCLUSIVE
+}
+
+enum NpsQuestionType {
+  nps
+  single_choice
+  multi_choice
+  text
+  matrix
+}
+
+enum FunilPrioridade {
+  low
+  medium
+  high
+  urgent
+}
+
+enum FunilPermissaoNivel {
+  view
+  edit
+}
+
+enum RotaTipo {
+  diaria
+  semanal
+  mensal
+}
+
+enum RotaStatus {
+  planejada
+  em_execucao
+  realizada
+  nao_realizada
+  cancelada
+}
+
+enum RotaClienteStatus {
+  pendente
+  em_trajeto
+  em_visita
+  visitado
+  nao_visitado
+}
+
+enum DespesaFrequencia {
+  semanal
+  quinzenal
+  mensal
+}
+
+enum DespesaStatus {
+  rascunho
+  pendente
+  aprovada
+  reprovada
+  paga
+}
+
+enum DespesaPeriodoStatus {
+  aberto
+  fechado
+}
+
+enum DespesaEnvioStatus {
+  pendente
+  aprovado
+  reprovado
+  parcial
+}
+
+enum DespesaPagamentoStatus {
+  pendente
+  pago
+  cancelado
+}
+
+enum FormaPagamento {
+  pix
+  transferencia
+  dinheiro
+}
+
+enum LinktreeLinkStatus {
+  ativo
+  inativo
+}
+
+enum GeradorLinkTipo {
+  whatsapp
+  utm
+  google_review
+  google_maps
+  waze
+}
+
+enum GeradorTemplateTipo {
+  whatsapp_msg
+  utm_preset
+}
+
+enum RotasFormPerguntaTipo {
+  texto_curto
+  texto_longo
+  data
+  multipla_escolha
+  selecao
+  radio
+}
+
+enum RotasClienteFonte {
+  csv
+  cadastros
+  crm
+}
+
+enum HubInviteStatus {
+  pending
+  used
+  expired
+}
+
+enum CrmTarefaPrioridade {
+  baixa
+  media
+  alta
+  urgente
+}
+
+enum CrmTarefaStatus {
+  pendente
+  em_andamento
+  concluida
+  cancelada
+}
+
+enum MktgEventoTipo {
+  visualizacao
+  clique
+  scroll
+  conversao
+  form_submit
+  permanencia
+}
+
+enum MktgLpStatus {
+  rascunho
+  publicado
+  arquivado
+}
+
+enum MktgMetaStatus {
+  conectado
+  expirado
+  desconectado
+}
+
+enum MktgMetaCampanhaStatus {
+  ACTIVE
+  PAUSED
+  DELETED
+  ARCHIVED
+  IN_MODERATION
+}
+
+enum MktgPlataforma {
+  facebook
+  instagram
+  both
+}
+
+enum MktgPostStatus {
+  rascunho
+  agendado
+  publicado
+  erro
+}
+
+enum MktgCriativoTipo {
+  imagem
+  video
+  carrossel
+  texto
+}
+
+enum MktgCriativoStatus {
+  rascunho
+  aprovado
+  arquivado
+}
+
+enum MktgEmailStatus {
+  rascunho
+  agendado
+  enviado
+  pausado
+}
+
+enum MktgDisparoStatus {
+  pendente
+  enviado
+  aberto
+  clicado
+  falhou
+}
+
+// ============================================================
+// CORE — USUARIO
+// ============================================================
+
+model Usuario {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email          String
+  nome           String   @default("")
+  role           UserRole @default(viewer)
+  userTipo       UserTipo @default(colaborador) @map("user_tipo")
+  avatarUrl      String?  @map("avatar_url")
+  ambiente       Ambiente @default(ambos)
+  departamento   String?
+  ativo          Boolean  @default(true)
+  isSuperAdmin   Boolean  @default(false) @map("is_super_admin")
+  empresaId      String?  @map("empresa_id") @db.Uuid
+  celular        String?
+  hubPoints      Int      @default(0) @map("hub_points")
+  hubStatus      String?  @map("hub_status")
+  hubAllowedTypes String? @map("hub_allowed_types")
+  hubPreferences Json?    @map("hub_preferences")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  empresa              Empresa?              @relation(fields: [empresaId], references: [id], onDelete: SetNull)
+  permissoes           Permissoes?
+  colaborador          Colaborador?
+  parceiro             Parceiro?
+  cliente              Cliente?
+
+  @@map("profiles")
+}
+
+// ============================================================
+// CORE — EMPRESA
+// ============================================================
+
+model Empresa {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome      String
+  slug      String   @unique
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  dados              EmpresaDados?
+  endereco           EmpresaEndereco?
+  documentos         EmpresaDocumento[]
+  redesSociais       EmpresaRedesSocial?
+  design             EmpresaDesign?
+  departamentos      EmpresaDepartamento[]
+  cargos             EmpresaCargo[]
+  modulosEmpresa     ModuloEmpresa[]
+  moduloLimits       EmpresaModuloLimit[]
+  roleLimits         EmpresaRoleLimit[]
+  usuarios           Usuario[]
+  colaboradores      Colaborador[]
+  parceiros          Parceiro[]
+  clientes           Cliente[]
+  cadastros          Cadastro[]
+  credenciais        Credencial[]
+  atividades         Atividade[]
+  notificacoes       Notificacao[]
+  notificacoesTemplates NotificacaoTemplate[]
+  webhooks           Webhook[]
+  webhookLogs        WebhookLog[]
+  formSchema         FormSchema[]
+  apiConnectors      ApiConnector[]
+  integracoesConfig  IntegracaoConfig[]
+
+  // Catálogo
+  catalogoCategorias          CatalogoCategoria[]
+  catalogoConexoes            CatalogoConexao[]
+  catalogoFamilias            CatalogoFamilia[]
+  catalogoLinhas              CatalogoLinha[]
+  catalogoImplantes           CatalogoImplante[]
+  catalogoImagensImplante     CatalogoImagemImplante[]
+  catalogoFresas              CatalogoFresa[]
+  catalogoProtocoloFresagem   CatalogoProtocoloFresagem[]
+  catalogoTiposReabilitacao   CatalogoTipoReabilitacao[]
+  catalogoTiposAbutment       CatalogoTipoAbutment[]
+  catalogoAbutments           CatalogoAbutment[]
+  catalogoCategoriasAcessorio CatalogoCategoriaAcessorio[]
+  catalogoAcessorios          CatalogoAcessorio[]
+  catalogoChavesFerramental   CatalogoChaveFerramental[]
+  catalogoAcessorioFerramental CatalogoAcessorioFerramental[]
+  catalogoCategoriasInstrumental CatalogoCategoriaInstrumental[]
+  catalogoInstrumentaisGerais CatalogoInstrumentalGeral[]
+  catalogoWorkflows           CatalogoWorkflow[]
+  catalogoEtapasWorkflow      CatalogoEtapaWorkflow[]
+  catalogoGuiasReabilitacao   CatalogoGuiaReabilitacao[]
+  catalogoCategoriasKit       CatalogoCategoriaKit[]
+  catalogoKits                CatalogoKit[]
+  catalogoKitFamilias         CatalogoKitFamilia[]
+  catalogoKitComposicao       CatalogoKitComposicao[]
+  catalogoCupons              CatalogoCupom[]
+  catalogoFretes              CatalogoFrete[]
+  catalogoPromocionais        CatalogoPromocional[]
+
+  @@map("empresas")
+}
+
+// ============================================================
+// CORE — EMPRESA sub-entidades
+// ============================================================
+
+model EmpresaDados {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String     @unique @map("empresa_id") @db.Uuid
+  empTipo   TipoPessoa @map("emp_tipo")
+  razao     String?
+  fantasia  String?
+  cnpj      String?
+  cpf       String?
+  email     String?
+  celular   String?
+  fixo      String?
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("empresa_dados")
+}
+
+model EmpresaEndereco {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId   String   @unique @map("empresa_id") @db.Uuid
+  cep         String?
+  logradouro  String?
+  numero      String?
+  bairro      String?
+  complemento String?
+  cidade      String?
+  estado      String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("empresa_endereco")
+}
+
+model EmpresaDocumento {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String
+  doc       String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("empresa_documentos")
+}
+
+model EmpresaRedesSocial {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @unique @map("empresa_id") @db.Uuid
+  instagram String?
+  youtube   String?
+  linkedin  String?
+  facebook  String?
+  tiktok    String?
+  site      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("empresa_redes")
+}
+
+model EmpresaDesign {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId    String   @unique @map("empresa_id") @db.Uuid
+  theme        Json     @default("{}")
+  logoUrl      String?  @map("logo_url")
+  logoIndexUrl String?  @map("logo_index_url")
+  logoAppUrl   String?  @map("logo_app_url")
+  faviconUrl   String?  @map("favicon_url")
+  dbConfig     Json?    @map("db_config")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("empresa_design")
+}
+
+model EmpresaDepartamento {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, nome])
+  @@map("empresa_departamentos")
+}
+
+model EmpresaCargo {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, nome])
+  @@map("empresa_cargos")
+}
+
+// ============================================================
+// CORE — PERMISSÕES
+// ============================================================
+
+model Permissoes {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId     String    @unique @map("usuario_id") @db.Uuid
+  empresaId     String?   @map("empresa_id") @db.Uuid
+  permissoes    Json      @default("{}")
+  modulosAcesso Json      @default("{}") @map("modulos_acesso")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  updatedBy     String?   @map("updated_by") @db.Uuid
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("permissoes")
+}
+
+// ============================================================
+// CORE — COLABORADOR
+// ============================================================
+
+model Colaborador {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId String   @unique @map("usuario_id") @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  dados     ColabDados?
+  endereco  ColabEndereco?
+  documentos ColabDocumento[]
+  redes     ColabRedes?
+
+  @@map("colaboradores")
+}
+
+model ColabDados {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  colabId   String   @unique @map("colab_id") @db.Uuid
+  nome      String
+  email     String?
+  celular   String?
+  fixo      String?
+  ramal     String?
+  tipo      String?
+  avatar    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  colaborador Colaborador @relation(fields: [colabId], references: [id], onDelete: Cascade)
+
+  @@map("colab_dados")
+}
+
+model ColabEndereco {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  colabId     String   @unique @map("colab_id") @db.Uuid
+  cep         String?
+  logradouro  String?
+  numero      String?
+  bairro      String?
+  complemento String?
+  cidade      String?
+  estado      String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  colaborador Colaborador @relation(fields: [colabId], references: [id], onDelete: Cascade)
+
+  @@map("colab_endereco")
+}
+
+model ColabDocumento {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  colabId   String   @map("colab_id") @db.Uuid
+  nome      String
+  doc       String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  colaborador Colaborador @relation(fields: [colabId], references: [id], onDelete: Cascade)
+
+  @@map("colab_documento")
+}
+
+model ColabRedes {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  colabId   String   @unique @map("colab_id") @db.Uuid
+  instagram String?
+  linkedin  String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  colaborador Colaborador @relation(fields: [colabId], references: [id], onDelete: Cascade)
+
+  @@map("colab_redes")
+}
+
+// ============================================================
+// CORE — PARCEIRO
+// ============================================================
+
+model Parceiro {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId String   @unique @map("usuario_id") @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  usuario   Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  empresa   Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  dados     ParcDados?
+  endereco  ParcEndereco?
+  documentos ParcDocumento[]
+  redes     ParcRedes?
+
+  @@map("parceiros")
+}
+
+model ParcDados {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  parcId    String     @unique @map("parc_id") @db.Uuid
+  empTipo   TipoPessoa @map("emp_tipo")
+  razao     String?
+  fantasia  String?
+  cnpj      String?
+  cpf       String?
+  email     String?
+  celular   String?
+  fixo      String?
+  logo      String?
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  parceiro Parceiro @relation(fields: [parcId], references: [id], onDelete: Cascade)
+
+  @@map("parc_dados")
+}
+
+model ParcEndereco {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  parcId      String   @unique @map("parc_id") @db.Uuid
+  cep         String?
+  logradouro  String?
+  numero      String?
+  bairro      String?
+  complemento String?
+  cidade      String?
+  estado      String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  parceiro Parceiro @relation(fields: [parcId], references: [id], onDelete: Cascade)
+
+  @@map("parc_endereco")
+}
+
+model ParcDocumento {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  parcId    String   @map("parc_id") @db.Uuid
+  nome      String
+  doc       String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  parceiro Parceiro @relation(fields: [parcId], references: [id], onDelete: Cascade)
+
+  @@map("parc_documento")
+}
+
+model ParcRedes {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  parcId    String   @unique @map("parc_id") @db.Uuid
+  instagram String?
+  linkedin  String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  parceiro Parceiro @relation(fields: [parcId], references: [id], onDelete: Cascade)
+
+  @@map("parc_redes")
+}
+
+// ============================================================
+// CORE — CLIENTE
+// ============================================================
+
+model Cliente {
+  id         String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId  String? @unique @map("usuario_id") @db.Uuid
+  empresaId  String  @map("empresa_id") @db.Uuid
+  estagioId  String? @map("estagio_id") @db.Uuid
+  ativo      Boolean @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  usuario         Usuario?         @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  empresa         Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  pipelineEstagio PipelineEstagio? @relation(fields: [estagioId], references: [id], onDelete: SetNull)
+  dados           CliDados?
+  endereco        CliEndereco?
+  documentos      CliDocumento[]
+  redes           CliRedes?
+
+  @@map("clientes")
+}
+
+model CliDados {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cliId     String     @unique @map("cli_id") @db.Uuid
+  empTipo   TipoPessoa @map("emp_tipo")
+  razao     String?
+  fantasia  String?
+  cnpj      String?
+  cpf       String?
+  email     String?
+  celular   String?
+  fixo      String?
+  logo      String?
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  cliente Cliente @relation(fields: [cliId], references: [id], onDelete: Cascade)
+
+  @@map("cli_dados")
+}
+
+model CliEndereco {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cliId       String   @unique @map("cli_id") @db.Uuid
+  cep         String?
+  logradouro  String?
+  numero      String?
+  bairro      String?
+  complemento String?
+  cidade      String?
+  estado      String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  cliente Cliente @relation(fields: [cliId], references: [id], onDelete: Cascade)
+
+  @@map("cli_endereco")
+}
+
+model CliDocumento {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cliId     String   @map("cli_id") @db.Uuid
+  nome      String
+  doc       String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  cliente Cliente @relation(fields: [cliId], references: [id], onDelete: Cascade)
+
+  @@map("cli_documento")
+}
+
+model CliRedes {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cliId     String   @unique @map("cli_id") @db.Uuid
+  instagram String?
+  linkedin  String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  cliente Cliente @relation(fields: [cliId], references: [id], onDelete: Cascade)
+
+  @@map("cli_redes")
+}
+
+// ============================================================
+// CORE — CONFIGURAÇÕES
+// ============================================================
+
+model ModuloEmpresa {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  moduloKey String   @map("modulo_key")
+  ativo     Boolean  @default(true)
+  config    Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, moduloKey])
+  @@map("modulos_empresa")
+}
+
+model EmpresaModuloLimit {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId      String   @map("empresa_id") @db.Uuid
+  moduloKey      String   @map("modulo_key")
+  maxCredenciais Int?     @map("max_credenciais")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, moduloKey])
+  @@map("empresa_modulo_limits")
+}
+
+model EmpresaRoleLimit {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId      String   @map("empresa_id") @db.Uuid
+  role           UserTipo
+  maxCredenciais Int      @default(999) @map("max_credenciais")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, role])
+  @@map("empresa_role_limits")
+}
+
+model AppConfig {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String   @unique
+  value       String
+  description String?
+  type        String   @default("env")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedBy   String?  @map("updated_by") @db.Uuid
+
+  @@map("app_config")
+}
+
+model MockCredential {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identifier String    @unique
+  email      String
+  password   String
+  role       UserRole
+  ambiente   Ambiente?
+  ativo      Boolean   @default(true)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+
+  @@map("mock_credentials")
+}
+
+// ============================================================
+// CORE — CREDENCIAIS
+// ============================================================
+
+model Credencial {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdById         String?  @map("created_by") @db.Uuid
+  nomeCompleto        String   @map("nome_completo")
+  emailCorporativo    String   @map("email_corporativo")
+  whatsappCorporativo String?  @map("whatsapp_corporativo")
+  departamento        String?
+  ativo               Boolean  @default(true)
+  empresaId           String?  @map("empresa_id") @db.Uuid
+  escopos             Json     @default("[]")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  createdby Usuario? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  empresa   Empresa? @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("credenciais")
+}
+
+// ============================================================
+// CORE — ATIVIDADES
+// ============================================================
+
+model Atividade {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entidadeTipo String   @map("entidade_tipo")
+  entidadeId   String   @map("entidade_id")
+  acao         String
+  descricao    String   @default("")
+  usuarioId    String?  @map("usuario_id") @db.Uuid
+  empresaId    String?  @map("empresa_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  usuario Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  empresa Empresa? @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("atividades")
+}
+
+// ============================================================
+// CORE — NOTIFICAÇÕES
+// ============================================================
+
+model Notificacao {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  usuarioId String   @map("usuario_id") @db.Uuid
+  titulo    String
+  mensagem  String
+  lida      Boolean  @default(false)
+  dados     Json?
+  empresaId String?  @map("empresa_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  usuario Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  empresa Empresa? @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("notificacoes")
+}
+
+model NotificacaoTemplate {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  evento        String   @unique
+  titulo        String
+  corpoTemplate String   @map("corpo_template")
+  ativo         Boolean  @default(true)
+  empresaId     String?  @map("empresa_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa? @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("notificacoes_templates")
+}
+
+// ============================================================
+// CORE — WEBHOOKS
+// ============================================================
+
+model Webhook {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome         String
+  evento       String
+  tipoEvento   String   @default("button_action") @map("tipo_evento")
+  url          String
+  metodo       String   @default("POST")
+  headers      Json     @default("{}")
+  bodyTemplate Json     @default("{}") @map("body_template")
+  ativo        Boolean  @default(true)
+  moduloKey    String?  @map("modulo_key")
+  eventoKey    String?  @map("evento_key")
+  eventoCustom String?  @map("evento_custom")
+  empresaId    String?  @map("empresa_id") @db.Uuid
+  updatedById  String?  @map("updated_by") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  empresa   Empresa?      @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  updatedby Usuario?      @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+  logs      WebhookLog[]
+
+  @@map("webhooks")
+}
+
+model WebhookLog {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  webhookId      String?  @map("webhook_id") @db.Uuid
+  evento         String?
+  url            String?
+  statusCode     Int?     @map("status_code")
+  resposta       String?
+  sucesso        Boolean?
+  payloadEnviado Json?    @map("payload_enviado")
+  empresaId      String?  @map("empresa_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  webhook Webhook?  @relation(fields: [webhookId], references: [id], onDelete: SetNull)
+  empresa Empresa?  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("webhook_logs")
+}
+
+// ============================================================
+// CORE — FORM SCHEMA
+// ============================================================
+
+model FormSchema {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tipoPessoa  String   @map("tipo_pessoa")
+  etapa       String
+  campoKey    String   @map("campo_key")
+  label       String
+  tipoInput   String   @default("text") @map("tipo_input")
+  opcoes      Json     @default("[]")
+  obrigatorio Boolean  @default(true)
+  visivel     Boolean  @default(true)
+  ordem       Int      @default(0)
+  isCustom    Boolean  @default(false) @map("is_custom")
+  empresaId   String?  @map("empresa_id") @db.Uuid
+  updatedById String?  @map("updated_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  empresa   Empresa?  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  updatedby Usuario?  @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@unique([tipoPessoa, campoKey])
+  @@map("form_schema")
+}
+
+model ApiConnector {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome      String
+  tipo      String
+  config    Json     @default("{}")
+  ativo     Boolean  @default(true)
+  empresaId String?  @map("empresa_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa? @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("api_connectors")
+}
+
+model IntegracaoConfig {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  chave     String   @unique
+  nome      String
+  ativo     Boolean  @default(false)
+  config    Json     @default("{}")
+  empresaId String?  @map("empresa_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa? @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("integracoes_config")
+}
+
+// ============================================================
+// MÓDULO: CADASTROS
+// ============================================================
+
+model Cadastro {
+  id                     String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  codigoCliente          String?         @map("codigo_cliente")
+  tipoPessoa             TipoPessoa?     @map("tipo_pessoa")
+  colaborador            String?
+  observacoes            String          @default("")
+  createdById            String?         @map("created_by") @db.Uuid
+  empresaId              String?         @map("empresa_id") @db.Uuid
+  status                 CadastroStatus  @default(link_gerado)
+  tokenAcesso            String?         @unique @map("token_acesso")
+  nomeTemporario         String?         @map("nome_temporario")
+  tipoAcao               TipoAcao?       @map("tipo_acao")
+  formaCompartilhamento  FormaCompartilhamento? @map("forma_compartilhamento")
+  linkExpiracao          DateTime?       @map("link_expiracao")
+  dataCriacaoLink        DateTime?       @map("data_criacao_link")
+  dataFinalizacao        DateTime?       @map("data_finalizacao")
+  comentarioReprovacao   String?         @map("comentario_reprovacao")
+  revisado               Boolean         @default(false)
+  consultaCnpjRealizada  Boolean         @default(false) @map("consulta_cnpj_realizada")
+  consultaCroRealizada   Boolean         @default(false) @map("consulta_cro_realizada")
+  statusVerificacaoToken Boolean         @default(false) @map("status_verificacao_token")
+  tokenGerado            String?         @map("token_gerado")
+  tokenExpiracao         DateTime?       @map("token_expiracao")
+  emailToken             String?         @map("email_token")
+  leadEmail              String?         @map("lead_email")
+  leadWhatsapp           String?         @map("lead_whatsapp")
+  leadNome               String?         @map("lead_nome")
+  dataConsulta           DateTime?       @map("data_consulta")
+  revisoes               Int             @default(0)
+  isDemo                 Boolean         @default(false) @map("is_demo")
+  linkAcessado           Boolean         @default(false) @map("link_acessado")
+  inicioPreenchimento    DateTime?       @map("inicio_preenchimento")
+  faCanal                String?         @map("2fa_canal")
+  faContato              String?         @map("2fa_contato")
+  faToken                String?         @map("2fa_token")
+  faExpiracao            DateTime?       @map("2fa_expiracao")
+  dadosExtras            Json?           @map("dados_extras")
+  camposCorrecao         Json?           @map("campos_correcao")
+  createdAt              DateTime        @default(now()) @map("created_at")
+  updatedAt              DateTime        @updatedAt @map("updated_at")
+
+  createdby Usuario          @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  empresa   Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  pf        CadastroPf?
+  pj        CadastroPj?
+  endereco  CadastroEndereco?
+  documentos Documento[]
+
+  @@map("cadastros")
+}
+
+model CadastroPf {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cadastroId       String    @unique @map("cadastro_id") @db.Uuid
+  nome             String
+  cpf              String?
+  dataNascimento   DateTime? @map("data_nascimento") @db.Date
+  cro              String?
+  croUf            String?   @map("cro_uf")
+  emailComunicacao String?   @map("email_comunicacao")
+  emailNf          String?   @map("email_nf")
+  telFixo          String?   @map("tel_fixo")
+  celular1         String?
+  celular2         String?
+  dataEmissaoCro   DateTime? @map("data_emissao_cro") @db.Date
+  estado           String?
+  empresaId        String?   @map("empresa_id") @db.Uuid
+
+  cadastro Cadastro @relation(fields: [cadastroId], references: [id], onDelete: Cascade)
+
+  @@map("cadastros_pf")
+}
+
+model CadastroPj {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cadastroId        String    @unique @map("cadastro_id") @db.Uuid
+  razaoSocial       String    @map("razao_social")
+  nomeFantasia      String?   @map("nome_fantasia")
+  cro               String?
+  croUf             String?   @map("cro_uf")
+  cnpj              String?
+  inscricaoEstadual String?   @map("inscricao_estadual")
+  emailComunicacao  String?   @map("email_comunicacao")
+  emailNf           String?   @map("email_nf")
+  telFixo           String?   @map("tel_fixo")
+  celular1          String?
+  celular2          String?
+  dataEmissaoCro    DateTime? @map("data_emissao_cro") @db.Date
+  empresaId         String?   @map("empresa_id") @db.Uuid
+
+  cadastro Cadastro @relation(fields: [cadastroId], references: [id], onDelete: Cascade)
+
+  @@map("cadastros_pj")
+}
+
+model CadastroEndereco {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cadastroId  String   @unique @map("cadastro_id") @db.Uuid
+  cep         String?
+  cidade      String?
+  bairro      String?
+  complemento String?
+  rua         String?
+  numero      String?
+  estado      String?
+  empresaId   String?  @map("empresa_id") @db.Uuid
+
+  cadastro Cadastro @relation(fields: [cadastroId], references: [id], onDelete: Cascade)
+
+  @@map("cadastros_enderecos")
+}
+
+model Documento {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cadastroId String   @map("cadastro_id") @db.Uuid
+  tipo       String
+  url        String
+  empresaId  String?  @map("empresa_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  cadastro Cadastro @relation(fields: [cadastroId], references: [id], onDelete: Cascade)
+
+  @@map("documentos")
+}
+
+// ============================================================
+// MÓDULO: NPS
+// ============================================================
+
+model NpsPergunta {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId    String          @map("empresa_id") @db.Uuid
+  key          String
+  orderIndex   Int             @default(0) @map("order_index")
+  type         NpsQuestionType
+  questionText String          @map("question_text")
+  options      Json            @default("[]")
+  required     Boolean         @default(true)
+  active       Boolean         @default(true)
+  isSystem     Boolean         @default(false) @map("is_system")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, key])
+  @@map("nps_perguntas")
+}
+
+model NpsResposta {
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId              String   @map("empresa_id") @db.Uuid
+  npsScore               Int?     @map("nps_score")
+  npsComment             String   @default("") @map("nps_comment")
+  csat                   String   @default("")
+  atendimentoComercial   String   @default("") @map("atendimento_comercial")
+  entendimentoConsultor   String   @default("") @map("entendimento_consultor")
+  melhoriaAtendimento    String   @default("") @map("melhoria_atendimento")
+  experienciaCompra      String   @default("") @map("experiencia_compra")
+  matrixFacilidadePedido Int      @default(0) @map("matrix_facilidade_pedido")
+  matrixClarezaCondicoes Int      @default(0) @map("matrix_clareza_condicoes")
+  matrixPrazoEntrega     Int      @default(0) @map("matrix_prazo_entrega")
+  matrixDisponibilidadeProdutos Int @default(0) @map("matrix_disponibilidade_produtos")
+  matrixComunicacao      Int      @default(0) @map("matrix_comunicacao")
+  expansaoProdutos       String   @default("") @map("expansao_produtos")
+  oportunidade           String   @default("")
+  perguntaFinal          String   @default("") @map("pergunta_final")
+  orderId                String?  @map("order_id")
+  clientId               String?  @map("client_id")
+  source                 String?
+  clientName             String?  @map("client_name")
+  vendorName             String?  @map("vendor_name")
+  dynamicAnswers         Json     @default("{}") @map("dynamic_answers")
+  createdAt              DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("nps_respostas")
+}
+
+model NpsWebhookConfig {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  url       String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("nps_webhook_config")
+}
+
+model NpsRelatorioEnvio {
+  id                BigInt   @id @default(autoincrement())
+  empresaId         String   @map("empresa_id") @db.Uuid
+  dataEnvio         DateTime @map("data_envio") @db.Date
+  totalProcessado   Int      @default(0) @map("total_processado")
+  enviadosSucesso   Int      @default(0) @map("enviados_sucesso")
+  semWhatsapp       Int      @default(0) @map("sem_whatsapp")
+  npsMenor30        Int      @default(0) @map("nps_menor_30")
+  clientesDetalhes  String?  @map("clientes_detalhes")
+  htmlRelatorio     String?  @map("html_relatorio")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("nps_relatorios_envio")
+}
+
+// ============================================================
+// MÓDULO: HUB
+// ============================================================
+
+model HubUserRole {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String        @map("user_id") @db.Uuid
+  role      HubAppRole    @default(client)
+  empresaId String?       @map("empresa_id") @db.Uuid
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  usuario Usuario @relation(fields: [userId], references: [id], onDelete: Cascade)
+  empresa Empresa? @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, empresaId])
+  @@map("hub_user_roles")
+}
+
+model HubMaterial {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title        Json            @default("{\"pt-br\":\"\",\"en-us\":\"\",\"es-es\":\"\"}")
+  type         HubMaterialType @default(pdf)
+  allowedRoles HubAppRole[]    @default([client, distributor, consultant]) @map("allowed_roles")
+  active       Boolean         @default(true)
+  points       Int             @default(10)
+  tags         String[]        @default([])
+  category     String?
+  empresaId    String?         @map("empresa_id") @db.Uuid
+  createdById  String          @map("created_by") @db.Uuid
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+
+  empresa     Empresa?              @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  createdby   Usuario               @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  assets      HubMaterialAsset[]
+  collectionItems HubCollectionItem[]
+  userProgress HubUserProgress[]
+  accessLogs  HubAccessLog[]
+
+  @@map("hub_materials")
+}
+
+model HubMaterialAsset {
+  id          String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  materialId  String               @map("material_id") @db.Uuid
+  language    HubAppLanguage       @default(pt_br)
+  url         String
+  subtitleUrl String?              @map("subtitle_url")
+  status      HubTranslationStatus @default(draft)
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  material HubMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@map("hub_material_assets")
+}
+
+model HubCollection {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title        Json            @default("{\"pt-br\":\"\",\"en-us\":\"\",\"es-es\":\"\"}")
+  description  Json?
+  coverImage   String?         @map("cover_image")
+  allowedRoles HubAppRole[]    @default([client, distributor, consultant]) @map("allowed_roles")
+  active       Boolean         @default(true)
+  points       Int             @default(50)
+  empresaId    String?         @map("empresa_id") @db.Uuid
+  createdById  String          @map("created_by") @db.Uuid
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+
+  empresa   Empresa?               @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  createdby Usuario                @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  items     HubCollectionItem[]
+  progress  HubCollectionProgress[]
+
+  @@map("hub_collections")
+}
+
+model HubCollectionItem {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  collectionId String   @map("collection_id") @db.Uuid
+  materialId   String   @map("material_id") @db.Uuid
+  orderIndex   Int      @default(0) @map("order_index")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  collection HubCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  material   HubMaterial   @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, materialId])
+  @@map("hub_collection_items")
+}
+
+model HubUserProgress {
+  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String            @map("user_id") @db.Uuid
+  materialId   String            @map("material_id") @db.Uuid
+  collectionId String?           @map("collection_id") @db.Uuid
+  status       HubProgressStatus @default(started)
+  completedAt  DateTime?         @map("completed_at")
+  empresaId    String?           @map("empresa_id") @db.Uuid
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  usuario    Usuario        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  material   HubMaterial    @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  collection HubCollection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  empresa    Empresa?       @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, materialId])
+  @@map("hub_user_progress")
+}
+
+model HubCollectionProgress {
+  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String            @map("user_id") @db.Uuid
+  collectionId String            @map("collection_id") @db.Uuid
+  status       HubProgressStatus @default(started)
+  startedAt    DateTime          @default(now()) @map("started_at")
+  completedAt  DateTime?         @map("completed_at")
+  empresaId    String?           @map("empresa_id") @db.Uuid
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  usuario    Usuario       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collection HubCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  empresa    Empresa?      @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collectionId])
+  @@map("hub_collection_progress")
+}
+
+model HubAccessLog {
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  materialId    String         @map("material_id") @db.Uuid
+  materialTitle String?        @map("material_title")
+  userId        String         @map("user_id") @db.Uuid
+  userName      String?        @map("user_name")
+  userRole      HubAppRole?    @map("user_role")
+  language      HubAppLanguage @default(pt_br)
+  timestamp     DateTime       @default(now())
+  empresaId     String?        @map("empresa_id") @db.Uuid
+
+  material HubMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  usuario  Usuario     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  empresa  Empresa?    @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("hub_access_logs")
+}
+
+model HubGamificationLevel {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String
+  minPoints  Int      @default(0) @map("min_points")
+  orderIndex Int      @default(0) @map("order_index")
+  color      String   @default("#6366f1")
+  empresaId  String?  @map("empresa_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  empresa Empresa? @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("hub_gamification_levels")
+}
+
+model HubBadge {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  description  String?
+  iconName     String          @default("star") @map("icon_name")
+  triggerType  HubBadgeTrigger @map("trigger_type")
+  triggerValue Int             @default(1) @map("trigger_value")
+  pointsReward Int             @default(0) @map("points_reward")
+  color        String          @default("#6366f1")
+  empresaId    String?         @map("empresa_id") @db.Uuid
+  createdAt    DateTime        @default(now()) @map("created_at")
+
+  empresa    Empresa?       @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  userBadges HubUserBadge[]
+
+  @@map("hub_badges")
+}
+
+model HubUserBadge {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  badgeId   String   @map("badge_id") @db.Uuid
+  earnedAt  DateTime @default(now()) @map("earned_at")
+  empresaId String?  @map("empresa_id") @db.Uuid
+
+  usuario Usuario  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge   HubBadge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  empresa Empresa? @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@map("hub_user_badges")
+}
+
+model HubInviteToken {
+  id                   String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  token                String          @unique
+  role                 HubAppRole      @default(client)
+  status               HubInviteStatus @default(pending)
+  usedById             String?         @map("used_by") @db.Uuid
+  usedAt               DateTime?       @map("used_at")
+  expiresAt            DateTime?       @map("expires_at")
+  createdById          String          @map("created_by") @db.Uuid
+  empresaId            String?         @map("empresa_id") @db.Uuid
+  createdAt            DateTime        @default(now()) @map("created_at")
+  shareWhatsappMessage String?         @map("share_whatsapp_message")
+  shareLink            String?         @map("share_link")
+
+  usedby   Usuario? @relation("HubInviteUsedBy", fields: [usedById], references: [id], onDelete: SetNull)
+  createdby Usuario @relation("HubInviteCreatedBy", fields: [createdById], references: [id], onDelete: Cascade)
+  empresa  Empresa? @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("hub_invite_tokens")
+}
+
+model HubSystemConfig {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId           String   @unique @map("empresa_id") @db.Uuid
+  appName             String   @default("Conexão Hub") @map("app_name")
+  logoUrl             String?  @map("logo_url")
+  themeDark           Json?    @map("theme_dark")
+  environmentThemes   Json?    @map("environment_themes")
+  showMockLoginCards  Boolean? @default(false) @map("show_mock_login_cards")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("hub_system_config")
+}
+
+model HubSystemIntegration {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId          String   @unique @map("empresa_id") @db.Uuid
+  geminiApiKey       String?  @map("gemini_api_key")
+  openaiApiKey       String?  @map("openai_api_key")
+  groqApiKey         String?  @map("groq_api_key")
+  openrouterApiKey   String?  @map("openrouter_api_key")
+  geminiFunction     String?  @map("gemini_function")
+  openaiFunction     String?  @map("openai_function")
+  groqFunction       String?  @map("groq_function")
+  openrouterFunction String?  @map("openrouter_function")
+  geminiActive       Boolean? @default(false) @map("gemini_active")
+  openaiActive       Boolean? @default(false) @map("openai_active")
+  groqActive         Boolean? @default(false) @map("groq_active")
+  openrouterActive   Boolean? @default(false) @map("openrouter_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("hub_system_integrations")
+}
+
+model HubChatbotConfig {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId    String        @unique @map("empresa_id") @db.Uuid
+  enabled      Boolean       @default(false)
+  webhookUrl   String?       @map("webhook_url")
+  allowedRoles HubAppRole[]  @default([client, distributor, consultant]) @map("allowed_roles")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("hub_chatbot_config")
+}
+
+// ============================================================
+// MÓDULO: MAPAS
+// ============================================================
+
+model MapasDistributor {
+  id          String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId   String              @map("empresa_id") @db.Uuid
+  code        String?
+  name        String
+  category    MapasDistCategory   @default(NON_EXCLUSIVE)
+  city        String?
+  state       String
+  pinColor    String?             @default("#4169e1") @map("pin_color")
+  pinImageUrl String?             @map("pin_image_url")
+  lat         Decimal?            @db.Decimal
+  lng         Decimal?            @db.Decimal
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("mapas_distributors")
+}
+
+model MapasConsultant {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  registration String?
+  name         String
+  region       String?
+  state        String
+  supervisor   String?
+  pinColor     String?  @default("#4169e1") @map("pin_color")
+  pinImageUrl  String?  @map("pin_image_url")
+  lat          Decimal? @db.Decimal
+  lng          Decimal? @db.Decimal
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("mapas_consultants")
+}
+
+// ============================================================
+// MÓDULO: LINKTREE
+// ============================================================
+
+model LinktreeColaborador {
+  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome         String
+  cargo        String
+  email        String
+  whatsapp     String
+  telefoneFixo String?            @map("telefone_fixo")
+  fotoUrl      String?            @map("foto_url")
+  status       LinktreeLinkStatus @default(ativo)
+  createdById  String             @map("created_by") @db.Uuid
+  empresaId    String?            @map("empresa_id") @db.Uuid
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+
+  createdby Usuario  @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  empresa   Empresa? @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("linktree_colaboradores")
+}
+
+model LinktreeTemaConfig {
+  id        String   @id
+  empresaId String?  @map("empresa_id") @db.Uuid
+  config    Json
+  updatedBy String?  @map("updated_by") @db.Uuid
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  empresa   Empresa? @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  updatedby Usuario? @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@map("linktree_tema_config")
+}
+
+model LinktreeEmpresaConfig {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @unique @map("empresa_id") @db.Uuid
+  slug      String   @unique
+  bio       String?
+  bannerUrl String?  @map("banner_url")
+  theme     Json     @default("{}")
+  updatedBy String?  @map("updated_by") @db.Uuid
+  updatedAt DateTime @default(now()) @map("updated_at")
+
+  empresa   Empresa              @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  updatedby Usuario?             @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
+  sections  LinktreeEmpresaSection[]
+
+  @@map("linktree_empresa_config")
+}
+
+model LinktreeEmpresaSection {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  titulo    String
+  ordem     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  empresa Empresa             @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  links   LinktreeEmpresaLink[]
+
+  @@map("linktree_empresa_sections")
+}
+
+model LinktreeEmpresaLink {
+  id             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sectionId      String     @map("section_id") @db.Uuid
+  empresaId      String     @map("empresa_id") @db.Uuid
+  titulo         String
+  url            String
+  icone          String?
+  destaque       Boolean    @default(false)
+  ativo          Boolean    @default(true)
+  agendadoInicio DateTime?  @map("agendado_inicio")
+  agendadoFim    DateTime?  @map("agendado_fim")
+  ordem          Int        @default(0)
+  createdAt      DateTime   @default(now()) @map("created_at")
+
+  section LinktreeEmpresaSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  empresa Empresa                @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  clicks  LinktreeEmpresaClick[]
+
+  @@map("linktree_empresa_links")
+}
+
+model LinktreeEmpresaClick {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  linkId    String   @map("link_id") @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  clickedAt DateTime @default(now()) @map("clicked_at")
+  ipHash    String?  @map("ip_hash")
+  userAgent String?  @map("user_agent")
+
+  link    LinktreeEmpresaLink @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  empresa Empresa             @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("linktree_empresa_clicks")
+}
+
+// ============================================================
+// MÓDULO: GERADOR DE LINKS
+// ============================================================
+
+model GeradorLink {
+  id        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String          @map("empresa_id") @db.Uuid
+  tipo      GeradorLinkTipo
+  titulo    String
+  urlGerada String          @map("url_gerada")
+  params    Json            @default("{}")
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("gerador_links")
+}
+
+model GeradorTemplate {
+  id        String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String               @map("empresa_id") @db.Uuid
+  tipo      GeradorTemplateTipo
+  nome      String
+  conteudo  Json
+  createdAt DateTime             @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("gerador_templates")
+}
+
+// ============================================================
+// MÓDULO: ROTAS DE VISITAS
+// ============================================================
+
+model RotasConfig {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId           String   @unique @map("empresa_id") @db.Uuid
+  valorKmReembolso    Decimal  @default(0) @map("valor_km_reembolso") @db.Decimal(10, 2)
+  raioPermitidoMetros Int      @default(300) @map("raio_permitido_metros")
+  updatedById         String?  @map("updated_by") @db.Uuid
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  empresa   Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  updatedby Usuario?  @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("rotas_config")
+}
+
+model RotasClienteBase {
+  id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId        String          @map("empresa_id") @db.Uuid
+  usuarioId        String          @map("usuario_id") @db.Uuid
+  nome             String
+  telefone         String?
+  cidade           String?
+  estado           String?
+  bairro           String?
+  rua              String?
+  numero           String?
+  cep              String?
+  enderecoCompleto String?         @map("endereco_completo")
+  latitude         Decimal?        @db.Decimal(10, 7)
+  longitude        Decimal?        @db.Decimal(10, 7)
+  ticketMedio      Decimal?        @map("ticket_medio") @db.Decimal(10, 2)
+  categoria        String?
+  ultimaVisita     DateTime?       @map("ultima_visita") @db.Date
+  fonte            RotasClienteFonte @default(csv)
+  fonteId          String?         @map("fonte_id") @db.Uuid
+  ativo            Boolean         @default(true)
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("rotas_clientes_base")
+}
+
+model Rota {
+  id                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId            String     @map("empresa_id") @db.Uuid
+  usuarioId            String     @map("usuario_id") @db.Uuid
+  titulo               String
+  dataRota             DateTime   @map("data_rota") @db.Date
+  tipo                 RotaTipo
+  status               RotaStatus @default(planejada)
+  dataInicio           DateTime?  @map("data_inicio")
+  dataFim              DateTime?  @map("data_fim")
+  localInicio          Json?      @map("local_inicio")
+  localFim             Json?      @map("local_fim")
+  totalVisitas         Int        @default(0) @map("total_visitas")
+  totalKm              Decimal?   @default(0) @map("total_km") @db.Decimal(10, 2)
+  totalTempoTrajetoMin Int        @default(0) @map("total_tempo_trajeto_min")
+  valorReembolso       Decimal?   @default(0) @map("valor_reembolso") @db.Decimal(10, 2)
+  createdAt            DateTime   @default(now()) @map("created_at")
+  updatedAt            DateTime   @updatedAt @map("updated_at")
+
+  empresa  Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  usuario  Usuario          @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  clientes RotasCliente[]
+  trajetos RotasTrajeto[]
+  visitas  RotasVisita[]
+
+  @@map("rotas")
+}
+
+model RotasCliente {
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId     String           @map("empresa_id") @db.Uuid
+  rotaId        String           @map("rota_id") @db.Uuid
+  clienteBaseId String           @map("cliente_base_id") @db.Uuid
+  ordem         Int              @default(0)
+  status        RotaClienteStatus @default(pendente)
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  empresa     Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  rota        Rota             @relation(fields: [rotaId], references: [id], onDelete: Cascade)
+  clienteBase RotasClienteBase @relation(fields: [clienteBaseId], references: [id], onDelete: Cascade)
+  trajetos    RotasTrajeto[]
+  visitas     RotasVisita[]
+
+  @@unique([rotaId, clienteBaseId])
+  @@map("rotas_clientes")
+}
+
+model RotasTrajeto {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId     String    @map("empresa_id") @db.Uuid
+  rotaId        String    @map("rota_id") @db.Uuid
+  rotaClienteId String    @map("rota_cliente_id") @db.Uuid
+  origemLat     Decimal?  @db.Decimal(10, 7)
+  origemLng     Decimal?  @db.Decimal(10, 7)
+  destinoLat    Decimal?  @db.Decimal(10, 7)
+  destinoLng    Decimal?  @db.Decimal(10, 7)
+  distanciaKm   Decimal?  @db.Decimal(10, 2)
+  duracaoMinutos Int?
+  valorReembolso Decimal? @db.Decimal(10, 2)
+  dataInicio    DateTime? @map("data_inicio")
+  dataFim       DateTime? @map("data_fim")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  empresa     Empresa      @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  rota        Rota         @relation(fields: [rotaId], references: [id], onDelete: Cascade)
+  rotaCliente RotasCliente @relation(fields: [rotaClienteId], references: [id], onDelete: Cascade)
+
+  @@map("rotas_trajetos")
+}
+
+model RotasVisita {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId     String   @map("empresa_id") @db.Uuid
+  rotaId        String   @map("rota_id") @db.Uuid
+  rotaClienteId String   @map("rota_cliente_id") @db.Uuid
+  clienteBaseId String   @map("cliente_base_id") @db.Uuid
+  consultorId   String   @map("consultor_id") @db.Uuid
+  dataInicio    DateTime @map("data_inicio")
+  dataFim       DateTime? @map("data_fim")
+  duracaoMinutos Int?
+  localInicio   Json?    @map("local_inicio")
+  localFim      Json?    @map("local_fim")
+  dentroRaio    Boolean? @default(true)
+  formulario   Json     @default("{}")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  empresa     Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  rota        Rota             @relation(fields: [rotaId], references: [id], onDelete: Cascade)
+  rotaCliente RotasCliente     @relation(fields: [rotaClienteId], references: [id], onDelete: Cascade)
+  clienteBase RotasClienteBase @relation(fields: [clienteBaseId], references: [id], onDelete: Cascade)
+  consultor   Usuario          @relation(fields: [consultorId], references: [id], onDelete: Cascade)
+
+  @@map("rotas_visitas")
+}
+
+model RotasFormPergunta {
+  id          String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId   String                @map("empresa_id") @db.Uuid
+  titulo      String
+  tipo        RotasFormPerguntaTipo
+  opcoes      String[]              @default([])
+  obrigatorio Boolean               @default(true)
+  ordem       Int                   @default(0)
+  ativo       Boolean               @default(true)
+  createdAt   DateTime              @default(now()) @map("created_at")
+  updatedAt   DateTime              @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("rotas_form_perguntas")
+}
+
+// ============================================================
+// MÓDULO: DESPESAS
+// ============================================================
+
+model DespesaTipo {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  nome         String
+  valorMaximo  Decimal  @default(0) @map("valor_maximo") @db.Decimal(10, 2)
+  ativo        Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  empresa  Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  despesas Despesa[]
+
+  @@unique([empresaId, nome])
+  @@map("despesas_tipos")
+}
+
+model DespesaConfig {
+  id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId  String            @unique @map("empresa_id") @db.Uuid
+  frequencia DespesaFrequencia @default(mensal)
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("despesas_config")
+}
+
+model DespesaPeriodo {
+  id         String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId  String               @map("empresa_id") @db.Uuid
+  dataInicio DateTime             @map("data_inicio") @db.Date
+  dataFim    DateTime             @map("data_fim") @db.Date
+  status     DespesaPeriodoStatus @default(aberto)
+  createdAt  DateTime             @default(now()) @map("created_at")
+  updatedAt  DateTime             @updatedAt @map("updated_at")
+
+  empresa  Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  despesas Despesa[]
+  envios   DespesaEnvio[]
+
+  @@unique([empresaId, dataInicio, dataFim])
+  @@map("despesas_periodos")
+}
+
+model Despesa {
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId             String        @map("empresa_id") @db.Uuid
+  usuarioId             String        @map("usuario_id") @db.Uuid
+  periodoId             String        @map("periodo_id") @db.Uuid
+  tipoId                String        @map("tipo_id") @db.Uuid
+  dataDespesa           DateTime      @map("data_despesa") @db.Date
+  valor                 Decimal       @db.Decimal(10, 2)
+  descricao             String        @default("")
+  comprovanteUrl        String?       @map("comprovante_url")
+  comprovanteTipo       String        @default("upload") @map("comprovante_tipo")
+  status                DespesaStatus @default(rascunho)
+  comentarioReprovacao  String        @default("") @map("comentario_reprovacao")
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  empresa Empresa        @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  usuario Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  periodo DespesaPeriodo @relation(fields: [periodoId], references: [id], onDelete: Cascade)
+  tipo    DespesaTipo    @relation(fields: [tipoId], references: [id], onDelete: Restrict)
+
+  @@map("despesas")
+}
+
+model DespesaEnvio {
+  id             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId      String             @map("empresa_id") @db.Uuid
+  usuarioId      String             @map("usuario_id") @db.Uuid
+  periodoId      String             @map("periodo_id") @db.Uuid
+  totalDespesas  Int                @default(0) @map("total_despesas")
+  valorTotal     Decimal            @default(0) @map("valor_total") @db.Decimal(10, 2)
+  status         DespesaEnvioStatus @default(pendente)
+  aprovadorId    String?            @map("aprovador_id") @db.Uuid
+  dataAprovacao  DateTime?          @map("data_aprovacao")
+  comentario     String             @default("")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  empresa   Empresa         @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  usuario   Usuario         @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  periodo   DespesaPeriodo  @relation(fields: [periodoId], references: [id], onDelete: Cascade)
+  aprovador Usuario?        @relation(fields: [aprovadorId], references: [id], onDelete: SetNull)
+  pagamentos DespesaPagamento[]
+
+  @@unique([empresaId, usuarioId, periodoId])
+  @@map("despesas_envios")
+}
+
+model DespesaPagamento {
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId            String                 @map("empresa_id") @db.Uuid
+  envioId              String                 @map("envio_id") @db.Uuid
+  valor                Decimal                @db.Decimal(10, 2)
+  formaPagamento       FormaPagamento         @map("forma_pagamento")
+  dataPagamento        DateTime               @map("data_pagamento") @db.Date
+  status               DespesaPagamentoStatus @default(pendente)
+  comprovantePagamento String?                @map("comprovante_pagamento")
+  createdAt            DateTime               @default(now()) @map("created_at")
+  updatedAt            DateTime               @updatedAt @map("updated_at")
+
+  empresa Empresa       @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  envio   DespesaEnvio  @relation(fields: [envioId], references: [id], onDelete: Cascade)
+
+  @@map("despesas_pagamentos")
+}
+
+// ============================================================
+// MÓDULO: FUNIS (Kanban)
+// ============================================================
+
+model Funil {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  titulo      String
+  descricao   String?
+  createdById String   @map("created_by") @db.Uuid
+  empresaId   String?  @map("empresa_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  createdby  Usuario          @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  empresa    Empresa?         @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  colunas    FunilColuna[]
+  tarefas    FunilTarefa[]
+  permissoes FunilPermissao[]
+
+  @@map("funis")
+}
+
+model FunilColuna {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  funilId   String   @map("funil_id") @db.Uuid
+  titulo    String
+  posicao   Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  funil   Funil          @relation(fields: [funilId], references: [id], onDelete: Cascade)
+  tarefas FunilTarefa[]
+
+  @@map("funis_colunas")
+}
+
+model FunilTarefa {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  funilId         String          @map("funil_id") @db.Uuid
+  colunaId        String          @map("coluna_id") @db.Uuid
+  titulo          String
+  descricao       String?
+  posicao         Int             @default(0)
+  prioridade      FunilPrioridade @default(medium)
+  atribuidoParaId String?         @map("atribuido_para") @db.Uuid
+  tools           String[]        @default([])
+  dataInicio      DateTime?       @map("data_inicio") @db.Date
+  dataFim         DateTime?       @map("data_fim") @db.Date
+  dependeTarefaId String?         @map("depende_tarefa_id") @db.Uuid
+  parentTaskId    String?         @map("parent_task_id") @db.Uuid
+  completedAt     DateTime?       @map("completed_at")
+  createdById     String          @map("created_by") @db.Uuid
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  funil          Funil         @relation(fields: [funilId], references: [id], onDelete: Cascade)
+  coluna         FunilColuna   @relation(fields: [colunaId], references: [id], onDelete: Cascade)
+  atribuidoPara  Usuario?      @relation(fields: [atribuidoParaId], references: [id], onDelete: SetNull)
+  dependeTarefa  FunilTarefa?  @relation("FunilTarefaDependencia", fields: [dependeTarefaId], references: [id], onDelete: SetNull)
+  parentTask     FunilTarefa?  @relation("FunilTarefaParent", fields: [parentTaskId], references: [id], onDelete: SetNull)
+  subTarefas     FunilTarefa[] @relation("FunilTarefaParent")
+  dependencias   FunilTarefa[] @relation("FunilTarefaDependencia")
+  createdby      Usuario       @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@map("funis_tarefas")
+}
+
+model FunilPermissao {
+  id        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  funilId   String              @map("funil_id") @db.Uuid
+  userId    String              @map("user_id") @db.Uuid
+  nivel     FunilPermissaoNivel @default(view)
+  createdAt DateTime            @default(now()) @map("created_at")
+
+  funil   Funil   @relation(fields: [funilId], references: [id], onDelete: Cascade)
+  usuario Usuario @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([funilId, userId])
+  @@map("funis_permissoes")
+}
+
+model FunilTemplate {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome        String
+  descricao   String?
+  isPublic    Boolean  @default(false) @map("is_public")
+  createdById String   @map("created_by") @db.Uuid
+  empresaId   String?  @map("empresa_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  createdby Usuario  @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  empresa   Empresa? @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  colunas   FunilTemplateCol[]
+  tarefas   FunilTemplateTask[]
+
+  @@map("funis_templates")
+}
+
+model FunilTemplateCol {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  templateId String   @map("template_id") @db.Uuid
+  titulo     String
+  posicao    Int      @default(0)
+
+  template FunilTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("funis_template_cols")
+}
+
+model FunilTemplateTask {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  templateId     String           @map("template_id") @db.Uuid
+  templateColIdx Int              @default(0) @map("template_col_idx")
+  titulo         String
+  descricao      String?
+  prioridade     FunilPrioridade? @default(medium)
+  posicao        Int              @default(0)
+
+  template FunilTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("funis_template_tasks")
+}
+
+// ============================================================
+// MÓDULO: CRM
+// ============================================================
+
+model PipelineEstagio {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  nome         String   @db.VarChar(100)
+  descricao    String?
+  ordem        Int      @default(0)
+  cor          String?  @default("#6366f1") @db.VarChar(7)
+  icone        String?  @default("Circle") @db.VarChar(50)
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  empresa  Empresa   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  clientes Cliente[]
+
+  @@map("pipeline_estagios")
+}
+
+model CrmTarefa {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId       String            @map("empresa_id") @db.Uuid
+  clienteId       String?           @map("cliente_id") @db.Uuid
+  responsavelId   String            @map("responsavel_id") @db.Uuid
+  criadorId       String            @map("criador_id") @db.Uuid
+  titulo          String            @db.VarChar(255)
+  descricao       String?
+  tipo            String?           @default("geral") @db.VarChar(50)
+  prioridade      CrmTarefaPrioridade? @default(media)
+  status          CrmTarefaStatus?  @default(pendente)
+  dataVencimento  DateTime?         @map("data_vencimento") @db.Date
+  dataConclusao   DateTime?         @map("data_conclusao")
+  lembreteEnviado Boolean           @default(false) @map("lembrete_enviado")
+  criadoEm        DateTime          @default(now()) @map("criado_em")
+  atualizadoEm    DateTime          @updatedAt @map("atualizado_em")
+
+  empresa     Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  responsavel Usuario @relation("CrmTarefaResponsavel", fields: [responsavelId], references: [id], onDelete: Cascade)
+  criador     Usuario @relation("CrmTarefaCriador", fields: [criadorId], references: [id], onDelete: Cascade)
+
+  @@map("tarefas")
+}
+
+model CrmTemplateMensagem {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  nome         String   @db.VarChar(100)
+  tipo         String   @default("whatsapp") @db.VarChar(20)
+  assunto      String?  @db.VarChar(255)
+  corpo        String
+  variaveis    Json     @default("[]")
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("templates_mensagem")
+}
+
+model CrmMeta {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId     String   @map("empresa_id") @db.Uuid
+  consultorId   String?  @map("consultor_id") @db.Uuid
+  periodo       String   @default("mensal") @db.VarChar(20)
+  dataInicio    DateTime @map("data_inicio") @db.Date
+  dataFim       DateTime @map("data_fim") @db.Date
+  tipo          String   @default("vendas") @db.VarChar(50)
+  valorMeta     Decimal  @map("valor_meta") @db.Decimal(15, 2)
+  valorAtingido Decimal  @default(0) @map("valor_atingido") @db.Decimal(15, 2)
+  criadoEm      DateTime @default(now()) @map("criado_em")
+  atualizadoEm  DateTime @updatedAt @map("atualizado_em")
+
+  empresa   Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  consultor Usuario? @relation(fields: [consultorId], references: [id], onDelete: Cascade)
+
+  @@map("metas")
+}
+
+// ============================================================
+// MÓDULO: MARKETING
+// ============================================================
+
+model MktgEvento {
+  id        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String          @map("empresa_id") @db.Uuid
+  modulo    String
+  tipo      MktgEventoTipo
+  metadata  Json?           @default("{}")
+  pageUrl   String?         @map("page_url")
+  userId    String?         @db.Uuid
+  sessionId String?         @map("session_id")
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("mktg_eventos")
+}
+
+model MktgLandingPage {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId    String       @map("empresa_id") @db.Uuid
+  titulo       String
+  slug         String
+  status       MktgLpStatus @default(rascunho)
+  conteudo     Json         @default("{}")
+  versaoAtual  Int          @default(1) @map("versao_atual")
+  template     String?
+  publicadoEm  DateTime?    @map("publicado_em")
+  updatedById  String?      @map("updated_by") @db.Uuid
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  empresa   Empresa               @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  versoes   MktgLandingPageVersao[]
+  updatedby Usuario?              @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("mktg_landing_pages")
+}
+
+model MktgLandingPageVersao {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  landingPageId String   @map("landing_page_id") @db.Uuid
+  versao        Int
+  conteudo      Json     @default("{}")
+  criadoPor     String?  @map("criado_por") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  landingPage MktgLandingPage @relation(fields: [landingPageId], references: [id], onDelete: Cascade)
+
+  @@map("mktg_landing_pages_versoes")
+}
+
+model MktgMetaConta {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId       String         @map("empresa_id") @db.Uuid
+  metaUserId      String         @map("meta_user_id")
+  metaPageId      String?        @map("meta_page_id")
+  metaAdAccountId String?        @map("meta_ad_account_id")
+  accessToken     String         @map("access_token")
+  tokenExpiresAt  DateTime       @map("token_expires_at")
+  status          MktgMetaStatus @default(desconectado)
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  empresa   Empresa             @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  campanhas MktgMetaCampanha[]
+
+  @@map("mktg_meta_contas")
+}
+
+model MktgMetaCampanha {
+  id               String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId        String                  @map("empresa_id") @db.Uuid
+  contaId          String?                 @map("conta_id") @db.Uuid
+  metaCampanhaId   String                  @map("meta_campanha_id")
+  nome             String
+  status           MktgMetaCampanhaStatus  @default(ACTIVE)
+  orcamentoDiario  Decimal?                @map("orcamento_diario") @db.Decimal(12, 2)
+  orcamentoTotal   Decimal?                @map("orcamento_total") @db.Decimal(12, 2)
+  plataforma       MktgPlataforma          @default(both)
+  dataInicio       DateTime                @map("data_inicio") @db.Date
+  dataFim          DateTime?               @map("data_fim") @db.Date
+  createdAt        DateTime                @default(now()) @map("created_at")
+  updatedAt        DateTime                @updatedAt @map("updated_at")
+
+  empresa  Empresa            @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  conta    MktgMetaConta?     @relation(fields: [contaId], references: [id], onDelete: SetNull)
+  insights MktgMetaInsight[]
+
+  @@map("mktg_meta_campanhas")
+}
+
+model MktgMetaPost {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId    String          @map("empresa_id") @db.Uuid
+  metaPostId   String?         @map("meta_post_id")
+  conteudo     String
+  midiaUrl     String?         @map("midia_url")
+  plataforma   MktgPlataforma  @default(both)
+  status       MktgPostStatus  @default(rascunho)
+  agendadoPara DateTime?       @map("agendado_para")
+  publicadoEm  DateTime?       @map("publicado_em")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("mktg_meta_posts")
+}
+
+model MktgMetaInsight {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId  String   @map("empresa_id") @db.Uuid
+  campanhaId String   @map("campanha_id") @db.Uuid
+  impressoes Int      @default(0)
+  cliques    Int      @default(0)
+  ctr        Decimal? @db.Decimal(5, 2)
+  gasto      Decimal? @default(0) @db.Decimal(12, 2)
+  conversoes Int      @default(0)
+  cpc        Decimal? @default(0) @db.Decimal(8, 2)
+  data       DateTime @default(now()) @db.Date
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  empresa  Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  campanha MktgMetaCampanha @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+
+  @@map("mktg_meta_insights")
+}
+
+model MktgUtm {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId   String   @map("empresa_id") @db.Uuid
+  nome        String
+  urlDestino  String   @map("url_destino")
+  utmSource   String   @map("utm_source")
+  utmMedium   String   @map("utm_medium")
+  utmCampaign String   @map("utm_campaign")
+  utmTerm     String?  @map("utm_term")
+  utmContent  String?  @map("utm_content")
+  cliques     Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("mktg_utms")
+}
+
+model MktgCriativo {
+  id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId  String            @map("empresa_id") @db.Uuid
+  nome       String
+  descricao  String?
+  tipo       MktgCriativoTipo  @default(imagem)
+  arquivoUrl String?           @map("arquivo_url")
+  previewUrl String?           @map("preview_url")
+  tags       String[]          @default([])
+  status     MktgCriativoStatus @default(rascunho)
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("mktg_criativos")
+}
+
+model MktgCampanhaEmail {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId     String          @map("empresa_id") @db.Uuid
+  nome          String
+  assunto       String
+  remetente     String          @default("noreply@conexaosistema.com.br")
+  conteudoHtml  String?         @map("conteudo_html")
+  status        MktgEmailStatus @default(rascunho)
+  agendadoPara  DateTime?       @map("agendado_para")
+  enviadoEm     DateTime?       @map("enviado_em")
+  totalEnviados Int             @default(0) @map("total_enviados")
+  totalAbertos  Int             @default(0) @map("total_abertos")
+  totalCliques  Int             @default(0) @map("total_cliques")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  empresa  Empresa           @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  disparos MktgDisparoEmail[]
+
+  @@map("mktg_campanhas_email")
+}
+
+model MktgDisparoEmail {
+  id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId  String            @map("empresa_id") @db.Uuid
+  campanhaId String            @map("campanha_id") @db.Uuid
+  email      String
+  enviadoEm  DateTime?         @map("enviado_em")
+  abertoEm   DateTime?         @map("aberto_em")
+  clicadoEm  DateTime?         @map("clicado_em")
+  status     MktgDisparoStatus @default(pendente)
+  createdAt  DateTime          @default(now()) @map("created_at")
+
+  empresa  Empresa           @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  campanha MktgCampanhaEmail @relation(fields: [campanhaId], references: [id], onDelete: Cascade)
+
+  @@map("mktg_disparos_email")
+}
+
+model MktgCalendario {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String    @map("empresa_id") @db.Uuid
+  titulo    String
+  descricao String?
+  data      DateTime  @db.Date
+  hora      DateTime? @db.Time
+  tipo      String?
+  status    String    @default("pendente")
+  usuarioId String?   @map("usuario_id") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  empresa Empresa  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  usuario Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@map("mktg_calendario")
+}
+
+model MktgLead {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId   String   @map("empresa_id") @db.Uuid
+  nome        String
+  email       String?
+  telefone    String?
+  origem      String?
+  status      String   @default("novo")
+  utmSource   String?  @map("utm_source")
+  utmMedium   String?  @map("utm_medium")
+  utmCampaign String?  @map("utm_campaign")
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("mktg_leads")
+}
+
+model MktgPixel {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String
+  pixelId   String   @map("pixel_id")
+  tipo      String   @default("meta")
+  ativo     Boolean  @default(true)
+  config    Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("mktg_pixels")
+}
+
+// ============================================================
+// MÓDULO: CATÁLOGO
+// ============================================================
+
+// --- Hierarquia ---
+
+model CatalogoCategoria {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String
+  locked    Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa   Empresa             @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  conexoes  CatalogoConexao[]
+
+  @@unique([empresaId, nome])
+  @@map("catalogo_categorias")
+}
+
+model CatalogoConexao {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId  String   @map("empresa_id") @db.Uuid
+  categoriaId String  @map("categoria_id") @db.Uuid
+  nome       String
+  sigla      String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  empresa   Empresa           @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  categoria CatalogoCategoria @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  familias  CatalogoFamilia[]
+
+  @@map("catalogo_conexoes")
+}
+
+model CatalogoFamilia {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId          String   @map("empresa_id") @db.Uuid
+  conexaoId          String   @map("conexao_id") @db.Uuid
+  nome               String
+  corIdentificacao   String   @default("#c9a655") @map("cor_identificacao")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  empresa   Empresa         @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  conexao   CatalogoConexao @relation(fields: [conexaoId], references: [id], onDelete: Cascade)
+  linhas    CatalogoLinha[]
+  abutments CatalogoAbutment[]
+
+  @@map("catalogo_familias")
+}
+
+model CatalogoLinha {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  familiaId String   @map("familia_id") @db.Uuid
+  nome      String
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa    Empresa           @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  familia    CatalogoFamilia   @relation(fields: [familiaId], references: [id], onDelete: Cascade)
+  implantes  CatalogoImplante[]
+
+  @@map("catalogo_linhas")
+}
+
+// --- Implantes ---
+
+model CatalogoImplante {
+  sku              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId        String   @map("empresa_id") @db.Uuid
+  linhaId          String   @map("linha_id") @db.Uuid
+  diametroMm       Decimal  @map("diametro_mm") @db.Decimal(5, 2)
+  comprimentoMm    Decimal  @map("comprimento_mm") @db.Decimal(5, 2)
+  roscaInterna     String?  @map("rosca_interna")
+  regiaoApical     String?  @map("regiao_apical")
+  regiaoCervical   String?  @map("regiao_cervical")
+  torqueInsercao   Decimal? @map("torque_insercao") @db.Decimal(5, 2)
+  detalhesExtras   Json     @default("{}") @map("detalhes_extras")
+  ativo            Boolean  @default(true)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  empresa   Empresa         @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  linha     CatalogoLinha   @relation(fields: [linhaId], references: [id], onDelete: Cascade)
+  imagens   CatalogoImagemImplante[]
+  protocolos CatalogoProtocoloFresagem[]
+
+  @@map("catalogo_implantes")
+}
+
+model CatalogoImagemImplante {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId      String   @map("empresa_id") @db.Uuid
+  implanteSku    String   @map("implante_sku") @db.Uuid
+  urlImagem      String   @map("url_imagem")
+  ordemExibicao  Int      @default(0) @map("ordem_exibicao")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  empresa  Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  implante CatalogoImplante @relation(fields: [implanteSku, empresaId], references: [sku, empresaId], onDelete: Cascade)
+
+  @@map("catalogo_imagens_implante")
+}
+
+model CatalogoFresa {
+  sku         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId   String   @map("empresa_id") @db.Uuid
+  nome        String
+  diametroMm  Decimal? @map("diametro_mm") @db.Decimal(5, 2)
+  vendaAvulsa Boolean  @default(false) @map("venda_avulsa")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  empresa     Empresa                    @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  protocolos  CatalogoProtocoloFresagem[]
+
+  @@map("catalogo_fresas")
+}
+
+model CatalogoProtocoloFresagem {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId   String   @map("empresa_id") @db.Uuid
+  implanteSku String   @map("implante_sku") @db.Uuid
+  fresaSku    String   @map("fresa_sku") @db.Uuid
+  tipoOsso    String   @map("tipo_osso")
+  ordemUso    Int      @map("ordem_uso")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  empresa  Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  implante CatalogoImplante @relation(fields: [implanteSku, empresaId], references: [sku, empresaId], onDelete: Cascade)
+  fresa    CatalogoFresa    @relation(fields: [fresaSku, empresaId], references: [sku, empresaId], onDelete: Cascade)
+
+  @@map("catalogo_protocolo_fresagem")
+}
+
+// --- Componentes Protéticos ---
+
+model CatalogoTipoReabilitacao {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa   Empresa               @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  abutments CatalogoAbutment[]
+
+  @@map("catalogo_tipos_reabilitacao")
+}
+
+model CatalogoTipoAbutment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String
+  sigla     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa   Empresa               @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  abutments CatalogoAbutment[]
+
+  @@map("catalogo_tipos_abutment")
+}
+
+model CatalogoAbutment {
+  sku                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId            String   @map("empresa_id") @db.Uuid
+  familiaId            String   @map("familia_id") @db.Uuid
+  tipoReabilitacaoId   String   @map("tipo_reabilitacao_id") @db.Uuid
+  tipoAbutmentId       String   @map("tipo_abutment_id") @db.Uuid
+  diametroPlataforma   String?  @map("diametro_plataforma")
+  angulacaoGraus       Decimal? @map("angulacao_graus") @db.Decimal(5, 2)
+  alturaTransmucoso    Decimal? @map("altura_transmucoso") @db.Decimal(5, 2)
+  alturaCorpo          Decimal? @map("altura_corpo") @db.Decimal(5, 2)
+  torqueNcm            Decimal? @map("torque_ncm") @db.Decimal(5, 2)
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  empresa          Empresa                  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  familia          CatalogoFamilia          @relation(fields: [familiaId], references: [id], onDelete: Cascade)
+  tipoReabilitacao CatalogoTipoReabilitacao @relation(fields: [tipoReabilitacaoId], references: [id], onDelete: Cascade)
+  tipoAbutment     CatalogoTipoAbutment     @relation(fields: [tipoAbutmentId], references: [id], onDelete: Cascade)
+
+  @@map("catalogo_abutments")
+}
+
+// --- Acessórios e Ferramentas ---
+
+model CatalogoCategoriaAcessorio {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa    Empresa               @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  acessorios CatalogoAcessorio[]
+
+  @@map("catalogo_categorias_acessorio")
+}
+
+model CatalogoAcessorio {
+  sku            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId      String   @map("empresa_id") @db.Uuid
+  categoriaId    String   @map("categoria_id") @db.Uuid
+  nome           String
+  diametroMm     Decimal? @map("diametro_mm") @db.Decimal(5, 2)
+  alturaMm       Decimal? @map("altura_mm") @db.Decimal(5, 2)
+  caracteristicas Json    @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  empresa    Empresa                  @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  categoria  CatalogoCategoriaAcessorio @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  ferramentas CatalogoAcessorioFerramental[]
+
+  @@map("catalogo_acessorios")
+}
+
+model CatalogoChaveFerramental {
+  sku            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId      String   @map("empresa_id") @db.Uuid
+  nome           String
+  tipoFerramenta String   @map("tipo_ferramenta")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  empresa     Empresa                       @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  acessorios  CatalogoAcessorioFerramental[]
+
+  @@map("catalogo_chaves_ferramental")
+}
+
+model CatalogoAcessorioFerramental {
+  empresaId     String   @map("empresa_id") @db.Uuid
+  acessorioSku  String   @map("acessorio_sku") @db.Uuid
+  ferramentaSku String   @map("ferramenta_sku") @db.Uuid
+  obrigatorio   Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  empresa     Empresa               @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  acessorio   CatalogoAcessorio     @relation(fields: [acessorioSku, empresaId], references: [sku, empresaId], onDelete: Cascade)
+  ferramenta  CatalogoChaveFerramental @relation(fields: [ferramentaSku, empresaId], references: [sku, empresaId], onDelete: Cascade)
+
+  @@id([empresaId, acessorioSku, ferramentaSku])
+  @@map("catalogo_acessorio_ferramental")
+}
+
+model CatalogoCategoriaInstrumental {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId    String   @map("empresa_id") @db.Uuid
+  nome         String
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  empresa      Empresa                    @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  instrumentais CatalogoInstrumentalGeral[]
+
+  @@map("catalogo_categorias_instrumental")
+}
+
+model CatalogoInstrumentalGeral {
+  sku         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId   String   @map("empresa_id") @db.Uuid
+  categoriaId String   @map("categoria_id") @db.Uuid
+  nome        String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  empresa   Empresa                      @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  categoria CatalogoCategoriaInstrumental @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+
+  @@map("catalogo_instrumentais_gerais")
+}
+
+// --- Workflows ---
+
+model CatalogoWorkflow {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa                 @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  guias   CatalogoGuiaReabilitacao[]
+
+  @@map("catalogo_workflows")
+}
+
+model CatalogoEtapaWorkflow {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  ordem     Int
+  nome      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa                 @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  guias   CatalogoGuiaReabilitacao[]
+
+  @@map("catalogo_etapas_workflow")
+}
+
+model CatalogoGuiaReabilitacao {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId            String   @map("empresa_id") @db.Uuid
+  familiaId            String   @map("familia_id") @db.Uuid
+  tipoAbutmentId       String   @map("tipo_abutment_id") @db.Uuid
+  diametroPlataforma   String   @map("diametro_plataforma")
+  workflowId           String   @map("workflow_id") @db.Uuid
+  etapaId              String   @map("etapa_id") @db.Uuid
+  acessorioSku         String   @map("acessorio_sku") @db.Uuid
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  empresa      Empresa                @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  familia      CatalogoFamilia        @relation(fields: [familiaId], references: [id], onDelete: Cascade)
+  tipoAbutment CatalogoTipoAbutment   @relation(fields: [tipoAbutmentId], references: [id], onDelete: Cascade)
+  workflow     CatalogoWorkflow       @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  etapa        CatalogoEtapaWorkflow  @relation(fields: [etapaId], references: [id], onDelete: Cascade)
+  acessorio    CatalogoAcessorio      @relation(fields: [acessorioSku, empresaId], references: [sku, empresaId], onDelete: Cascade)
+
+  @@map("catalogo_guias_reabilitacao")
+}
+
+// --- Kits ---
+
+model CatalogoCategoriaKit {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String   @map("empresa_id") @db.Uuid
+  nome      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  kits    CatalogoKit[]
+
+  @@map("catalogo_categorias_kit")
+}
+
+model CatalogoKit {
+  sku         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId   String   @map("empresa_id") @db.Uuid
+  categoriaId String   @map("categoria_id") @db.Uuid
+  nome        String
+  descricao   String?
+  ativo       Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  empresa     Empresa              @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  categoria   CatalogoCategoriaKit @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  familias    CatalogoKitFamilia[]
+  composicao  CatalogoKitComposicao[]
+
+  @@map("catalogo_kits")
+}
+
+model CatalogoKitFamilia {
+  empresaId  String @map("empresa_id") @db.Uuid
+  kitSku     String @map("kit_sku") @db.Uuid
+  familiaId  String @map("familia_id") @db.Uuid
+
+  empresa Empresa          @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  kit     CatalogoKit      @relation(fields: [kitSku, empresaId], references: [sku, empresaId], onDelete: Cascade)
+  familia CatalogoFamilia  @relation(fields: [familiaId], references: [id], onDelete: Cascade)
+
+  @@id([empresaId, kitSku, familiaId])
+  @@map("catalogo_kit_familias")
+}
+
+model CatalogoKitComposicao {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId       String   @map("empresa_id") @db.Uuid
+  kitSku          String   @map("kit_sku") @db.Uuid
+  quantidade      Int      @default(1)
+  fresaSku        String?  @map("fresa_sku") @db.Uuid
+  chaveSku        String?  @map("chave_sku") @db.Uuid
+  acessorioSku    String?  @map("acessorio_sku") @db.Uuid
+  instrumentalSku String?  @map("instrumental_sku") @db.Uuid
+  implanteSku     String?  @map("implante_sku") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  empresa      Empresa                   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  kit          CatalogoKit               @relation(fields: [kitSku, empresaId], references: [sku, empresaId], onDelete: Cascade)
+  fresa        CatalogoFresa?            @relation(fields: [fresaSku, empresaId], references: [sku, empresaId], onDelete: Cascade)
+  chave        CatalogoChaveFerramental? @relation(fields: [chaveSku, empresaId], references: [sku, empresaId], onDelete: Cascade)
+  acessorio    CatalogoAcessorio?        @relation(fields: [acessorioSku, empresaId], references: [sku, empresaId], onDelete: Cascade)
+  instrumental CatalogoInstrumentalGeral? @relation(fields: [instrumentalSku, empresaId], references: [sku, empresaId], onDelete: Cascade)
+  implante     CatalogoImplante?         @relation(fields: [implanteSku, empresaId], references: [sku, empresaId], onDelete: Cascade)
+
+  @@map("catalogo_kit_composicao")
+}
+
+// --- Comercial ---
+
+model CatalogoCupom {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId String    @map("empresa_id") @db.Uuid
+  codigo    String
+  tipo      String
+  valor     Decimal   @db.Decimal(10, 2)
+  validade  DateTime?
+  ativo     Boolean   @default(true)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@unique([empresaId, codigo])
+  @@map("catalogo_cupons")
+}
+
+model CatalogoFrete {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId  String   @map("empresa_id") @db.Uuid
+  cepInicio  String   @map("cep_inicio")
+  cepFim     String   @map("cep_fim")
+  valor      Decimal  @db.Decimal(10, 2)
+  prazoDias  Int      @map("prazo_dias")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@map("catalogo_fretes")
+}
+
+model CatalogoPromocional {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId   String    @map("empresa_id") @db.Uuid
+  nome        String
+  descricao   String?
+  preco       Decimal   @db.Decimal(10, 2)
+  expiraEm    DateTime? @map("expira_em")
+  ativo       Boolean   @default(true)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  empresa Empresa                   @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  itens   CatalogoPromocionalItem[]
+
+  @@map("catalogo_promocionais")
+}
+
+model CatalogoPromocionalItem {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  empresaId       String   @map("empresa_id") @db.Uuid
+  promocionalId   String   @map("promocional_id") @db.Uuid
+  sku             String
+  tipo            String
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  empresa      Empresa              @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+  promocional  CatalogoPromocional  @relation(fields: [promocionalId], references: [id], onDelete: Cascade)
+
+  @@map("catalogo_promocional_itens")
+}

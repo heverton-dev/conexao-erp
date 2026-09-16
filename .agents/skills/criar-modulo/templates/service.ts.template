@@ -1,0 +1,60 @@
+import { supabase } from "~/core/supabase";
+import { dispararEventoModulo } from "~/core/services/webhooks";
+import type { {{MODULO_PASCAL}} } from "../types";
+
+const MODULO_KEY = "{{MODULO_KEY}}";
+
+export async function listar(empresaId: string): Promise<{{MODULO_PASCAL}}[]> {
+  const { data } = await supabase
+    .from("{{TABELA}}")
+    .select("*")
+    .eq("empresa_id", empresaId)
+    .order("created_at", { ascending: false });
+  return (data as {{MODULO_PASCAL}}[]) || [];
+}
+
+export async function criar(
+  input: Partial<{{MODULO_PASCAL}}>,
+): Promise<{{MODULO_PASCAL}}> {
+  const { data, error } = await supabase
+    .from("{{TABELA}}")
+    .insert(input)
+    .select()
+    .single();
+  if (error) throw error;
+  const item = data as {{MODULO_PASCAL}};
+  dispararEventoModulo(MODULO_KEY, "entidade.criada", { id: item.id, empresa_id: item.empresa_id }, item.empresa_id).catch(() => {});
+  return item;
+}
+
+export async function atualizar(
+  id: string,
+  updates: Partial<{{MODULO_PASCAL}}>,
+): Promise<{{MODULO_PASCAL}}> {
+  const { data, error } = await supabase
+    .from("{{TABELA}}")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  const item = data as {{MODULO_PASCAL}};
+  dispararEventoModulo(MODULO_KEY, "entidade.atualizada", { id: item.id, empresa_id: item.empresa_id }, item.empresa_id).catch(() => {});
+  return item;
+}
+
+export async function excluir(id: string): Promise<void> {
+  // Buscar empresa_id antes de excluir para o evento
+  const { data: item } = await supabase
+    .from("{{TABELA}}")
+    .select("id, empresa_id")
+    .eq("id", id)
+    .single();
+
+  const { error } = await supabase.from("{{TABELA}}").delete().eq("id", id);
+  if (error) throw error;
+
+  if (item) {
+    dispararEventoModulo(MODULO_KEY, "entidade.excluida", { id, empresa_id: item.empresa_id }, item.empresa_id).catch(() => {});
+  }
+}

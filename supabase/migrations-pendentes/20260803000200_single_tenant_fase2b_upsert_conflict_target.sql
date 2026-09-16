@@ -1,0 +1,41 @@
+-- ============================================================
+-- Migration: Single-tenant fase 2b — empresa_id nas tabelas de upsert
+-- Data: 2026-08-03
+-- Decisão: empresa_id NÃO será mais usado para multi-tenant.
+-- ============================================================
+-- ATENÇÃO — esta migration NÃO é mecânica.
+--
+-- As tabelas abaixo usam empresa_id como *conflict target* de upsert
+-- (`onConflict: "empresa_id"` ou `"empresa_id,modulo_key"` no client).
+-- Dropar a coluna sem antes trocar o índice único faz o upsert deixar de casar
+-- e inserir linha nova a cada save — duplicação silenciosa. Esse bug já
+-- aconteceu neste projeto: ver 20260720030000_fix_design_config_pk.sql, que o
+-- corrigiu em catalogo_design_config depois da migração single-tenant original.
+--
+-- Ordem obrigatória, por tabela:
+--   1. criar o novo índice único (single-row, ou por modulo_key)
+--   2. trocar o onConflict no client
+--   3. deployar o client
+--   4. só então dropar empresa_id
+--
+-- Padrão de índice single-row, copiado da 20260720030000:
+--   CREATE UNIQUE INDEX IF NOT EXISTS idx_<tabela>_single ON <tabela> ((true));
+-- Para tabela com escopo por módulo:
+--   CREATE UNIQUE INDEX IF NOT EXISTS idx_<tabela>_modulo ON <tabela> (modulo_key);
+--
+-- Tabelas e o onConflict atual:
+--   empresa_design_system
+--   design_sistema_modulo
+--   hub_config_chatbot
+--   hub_config_sistema
+--   hub_integracoes_sistema
+--   linktree_empresa_config
+--   rotas_config
+--   empresa_modulos
+--
+-- Antes de escrever o SQL, rode `npm run audit:empresa-id` e confirme quais
+-- destas ainda têm a coluna — a 20260721000000 alcançou algumas e não outras.
+-- ============================================================
+
+-- Deliberadamente vazia. Preencher junto da troca de onConflict no client.
+-- Contexto: A1 de docs/agents/plano-correcao-auditoria.md

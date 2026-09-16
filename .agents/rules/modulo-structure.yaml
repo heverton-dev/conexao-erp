@@ -1,0 +1,41 @@
+name: modulo-structure
+description: >
+  Valida a estrutura de um módulo em src/features/. Reflete o que o projeto
+  realmente usa — os 3 tipos de módulo estão em docs/agents/modulos.md.
+severity: error
+rules:
+  # REGISTRADO — tem module.ts
+  registrado:
+    required_files:
+      - module.ts
+    recommended_files:
+      - permissions.ts # obrigatório se houver rota protegida
+      - types.ts
+      - index.ts # barrel público
+    recommended_dirs:
+      - components
+      - hooks
+      - services
+    optional_files:
+      - diagnostic.ts # se hasDiagnostico
+      - onboarding.tsx
+    optional_dirs: [lib, utils, constants, schemas, contexts, import]
+
+  # SERVIÇO — sem module.ts, só index.ts com tipos + funções Supabase
+  servico:
+    required_files:
+      - index.ts
+    forbidden_files:
+      - module.ts
+
+  # META-MÓDULO — module.ts na raiz e em cada submódulo (ex: marketing)
+  meta:
+    required_files:
+      - module.ts
+    note: cada submódulo repete a estrutura de módulo registrado
+
+notes:
+  - "`pages/` NÃO é padrão do projeto: só existe em hub. Páginas ficam em components/."
+  - Todo módulo tem AGENTS.md, gerado por `node scripts/sync-docs.mjs`.
+
+reference: docs/agents/modulos.md

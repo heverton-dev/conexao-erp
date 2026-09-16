@@ -1,0 +1,108 @@
+import { LayoutDashboard, List } from "lucide-react";
+import {
+  registerModule,
+  registerNavItem,
+  registerPermission,
+  registerPermissionDefaults,
+} from "~/registry";
+import type { ModuleDefinition } from "~/registry";
+import { {{MODULO_PASCAL}}_PERMISSIONS } from "./permissions";
+
+export const {{MODULO_CAMEL}}Module: ModuleDefinition = {
+  key: "{{MODULO_KEY}}",
+  nome: "{{MODULO_NOME}}",
+  descricao: "{{MODULO_DESCRICAO}}",
+  icon: LayoutDashboard,
+  routes: [
+    "/{{MODULO_KEY}}",
+    "/{{MODULO_KEY}}/dashboard",
+  ],
+  permissions: {{MODULO_PASCAL}}_PERMISSIONS.map((p) => p.key),
+  ambientes: ["cadastro", "consultor", "tecnologia"],
+  abas: [
+    { key: "geral", label: "Geral", descricao: "Configurações gerais" },
+    { key: "permissoes", label: "Permissões", descricao: "Gerenciar permissões" },
+    { key: "eventos", label: "Eventos", descricao: "Eventos e webhooks do módulo" },
+  ],
+  events: [
+    {
+      key: "entidade.criada",
+      label: "Entidade Criada",
+      descricao: "Quando uma nova entidade é criada",
+      type: "status_change",
+    },
+    {
+      key: "entidade.atualizada",
+      label: "Entidade Atualizada",
+      descricao: "Quando uma entidade é atualizada",
+      type: "status_change",
+    },
+    {
+      key: "entidade.excluida",
+      label: "Entidade Excluída",
+      descricao: "Quando uma entidade é excluída",
+      type: "status_change",
+    },
+  ],
+  setup: () => {
+    for (const p of {{MODULO_PASCAL}}_PERMISSIONS) {
+      registerPermission({
+        key: p.key,
+        label: p.label,
+        description: p.description,
+        group: p.group,
+      });
+    }
+
+    registerNavItem({
+      id: "{{MODULO_KEY}}-dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+      to: "/{{MODULO_KEY}}/dashboard",
+      moduloKey: "{{MODULO_KEY}}",
+      permissionCheck: (perms) => perms?.{{MODULO_KEY}}_dashboard === true,
+      order: 100,
+    });
+
+    registerNavItem({
+      id: "{{MODULO_KEY}}-lista",
+      label: "Lista",
+      icon: List,
+      to: "/{{MODULO_KEY}}",
+      moduloKey: "{{MODULO_KEY}}",
+      permissionCheck: (perms) => perms?.{{MODULO_KEY}}_ver === true,
+      order: 110,
+    });
+
+    registerPermissionDefaults("{{MODULO_KEY}}", {
+      cadastro: {
+        {{MODULO_KEY}}_dashboard: true,
+        {{MODULO_KEY}}_ver: true,
+        {{MODULO_KEY}}_criar: true,
+        {{MODULO_KEY}}_editar: true,
+        {{MODULO_KEY}}_excluir: true,
+      },
+      consultor: {
+        {{MODULO_KEY}}_dashboard: true,
+        {{MODULO_KEY}}_ver: true,
+        {{MODULO_KEY}}_criar: false,
+        {{MODULO_KEY}}_editar: false,
+        {{MODULO_KEY}}_excluir: false,
+      },
+      tecnologia: {
+        {{MODULO_KEY}}_dashboard: true,
+        {{MODULO_KEY}}_ver: true,
+        {{MODULO_KEY}}_criar: true,
+        {{MODULO_KEY}}_editar: true,
+        {{MODULO_KEY}}_excluir: true,
+      },
+      suporte: {
+        {{MODULO_KEY}}_dashboard: false,
+        {{MODULO_KEY}}_ver: false,
+        {{MODULO_KEY}}_criar: false,
+        {{MODULO_KEY}}_editar: false,
+        {{MODULO_KEY}}_excluir: false,
+      },
+    });
+  },
+};

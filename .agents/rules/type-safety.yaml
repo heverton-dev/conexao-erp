@@ -1,0 +1,11 @@
+name: type-safety
+description: Valida segurança de tipos
+severity: warning
+rules:
+  strict_mode:
+    message: 'TypeScript strict mode deve estar habilitado'
+    validation: check_tsconfig_strict
+  no_any:
+    message: 'Evitar uso de tipo any'
+    pattern: ': any'
+    severity: warning

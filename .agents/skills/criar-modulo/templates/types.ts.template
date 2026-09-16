@@ -1,0 +1,15 @@
+export interface {{MODULO_KEY_PASCAL}} {
+  id: string
+  empresa_id: string
+  nome: string
+  created_at: string
+  updated_at: string
+}
+
+export interface {{MODULO_KEY_PASCAL}}Filtros {
+  busca?: string
+}
+
+export interface {{MODULO_KEY_PASCAL}}FormData {
+  nome: string
+}

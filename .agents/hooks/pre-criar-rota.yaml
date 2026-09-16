@@ -1,0 +1,13 @@
+name: pre-criar-rota
+description: Valida antes de criar rota
+trigger: antes_de_executar: criar-rota
+actions:
+  - verificar_rota_existe:
+      glob: 'src/routes/**/*.tsx'
+      pattern: $rota_path
+      on_error: abort
+
+  - verificar_modulo_registrado:
+      file: src/registry/modules.ts
+      pattern: $modulo_key
+      on_error: warn

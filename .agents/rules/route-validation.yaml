@@ -1,0 +1,10 @@
+name: route-validation
+description: Valida rotas duplicadas
+severity: error
+rules:
+  path_unico:
+    message: 'Path de rota deve ser único'
+    validation: check_unique_route
+  modulo_registrado:
+    message: 'Módulo deve estar registrado antes de criar rotas'
+    validation: check_module_registered

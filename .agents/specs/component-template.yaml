@@ -1,0 +1,20 @@
+name: ComponentTemplate
+description: Template para componentes React do ERP Conexão
+schema:
+  type: object
+  required: [nome, variantes]
+  properties:
+    nome:
+      type: string
+      pattern: '^[A-Z][a-zA-Z]+$'
+    variantes:
+      type: object
+      properties:
+        variant:
+          type: array
+          items:
+            type: string
+        size:
+          type: array
+          items:
+            type: string

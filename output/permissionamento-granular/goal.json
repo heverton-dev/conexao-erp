@@ -1,0 +1,409 @@
+{
+  "title": "Permissionamento Granular",
+  "goal": "Explicar como funciona o sistema de permissionamento granular do ERP Odonto, cobrindo as duas camadas de controle, o fluxo de login ao UI, e os 3 niveis de acesso",
+  "audience": "Equipe tecnica, desenvolvedores e administradores do sistema",
+  "owner": "Equipe de Arquitetura",
+  "randomSeed": "permission-granular-20260721-xk9",
+  "pageCount": 9,
+  "language": "en",
+  "themePack": "theme03",
+  "slides": [
+    {
+      "layout": "theme03_page002",
+      "props": {
+        "eyebrow": "ERP ODONTO",
+        "kicker": "Arquitetura de Seguranca",
+        "titleA": "Permissionamento",
+        "titleAccent": "Granular",
+        "titleB": "Controle de Acesso",
+        "titleC": "por Chave e Modulo",
+        "sub": "Sistema de duas camadas com 100+ permissoes em 20+ modulos",
+        "stats": [
+          {
+            "v": "20+",
+            "u": "modulos",
+            "k": "registrados"
+          },
+          {
+            "v": "100+",
+            "u": "permissoes",
+            "k": "chaves"
+          },
+          {
+            "v": "5",
+            "u": "ambientes",
+            "k": "defaults"
+          }
+        ],
+        "meta": [
+          "React + Supabase",
+          "Guard + Registry",
+          "Versao 2026.07",
+          "Dark + Gold"
+        ],
+        "forceDark": true,
+        "showEyebrow": true,
+        "accent": "blue",
+        "statCount": 3
+      }
+    },
+    {
+      "layout": "theme03_page006",
+      "props": {
+        "eyebrow": "SUMARIO",
+        "kicker": "Navegacao",
+        "titlePre": "O que voce vai",
+        "titleAccent": "aprender",
+        "chapters": [
+          {
+            "idx": "01",
+            "title": "Visao Geral"
+          },
+          {
+            "idx": "02",
+            "title": "Permissoes Granulares"
+          },
+          {
+            "idx": "03",
+            "title": "Modulos de Acesso"
+          },
+          {
+            "idx": "04",
+            "title": "Fluxo Login ao UI"
+          },
+          {
+            "idx": "05",
+            "title": "Niveis de Acesso"
+          },
+          {
+            "idx": "06",
+            "title": "Exemplo Pratico"
+          },
+          {
+            "idx": "07",
+            "title": "Conclusoes"
+          }
+        ],
+        "forceDark": true,
+        "showEyebrow": true,
+        "accent": "blue",
+        "itemCount": 7
+      }
+    },
+    {
+      "layout": "theme03_page038",
+      "props": {
+        "copy": {
+          "t001": "CONCEITO-CHAVE",
+          "t002": "Duas camadas de controle",
+          "t003": "ARQUITETURA",
+          "t004": "Permissoes + Modulos"
+        },
+        "takeaways": [
+          {
+            "idx": "01",
+            "axis": "permissoes",
+            "key": "jsonb",
+            "title": "permissoes.jsonb",
+            "desc": "Map de chave/boolean. Ex: crm_dashboard: true"
+          },
+          {
+            "idx": "02",
+            "axis": "modulos",
+            "key": "acesso",
+            "title": "modulos_acesso.jsonb",
+            "desc": "Por modulo: acessar, paginas, acoes"
+          },
+          {
+            "idx": "03",
+            "axis": "bypass",
+            "key": "admin",
+            "title": "Super Admin",
+            "desc": "is_super_admin recebe todas permissoes"
+          }
+        ],
+        "forceDark": true,
+        "showEyebrow": true,
+        "showIndex": true,
+        "accent": "blue",
+        "itemCount": 3
+      }
+    },
+    {
+      "layout": "theme03_page028",
+      "props": {
+        "copy": {
+          "t001": "NUMEROS",
+          "t002": "Escala do permissionamento",
+          "t003": "Cobertura",
+          "t004": "100+ permissoes em 20+ modulos",
+          "t005": "Modulos Ativos",
+          "t006": "Padrao snake_case"
+        },
+        "stats": [
+          {
+            "label": "Permissoes",
+            "value": "100+",
+            "unit": "chaves"
+          },
+          {
+            "label": "Modulos",
+            "value": "20+",
+            "unit": "registrados"
+          },
+          {
+            "label": "Ambientes",
+            "value": "5",
+            "unit": "defaults"
+          }
+        ],
+        "forceDark": true,
+        "showEyebrow": true,
+        "showUnit": true,
+        "showSupport": true,
+        "accent": "blue",
+        "statCount": 3
+      }
+    },
+    {
+      "layout": "theme03_page022",
+      "props": {
+        "copy": {
+          "t001": "CAMADA 1",
+          "t002": "Permissoes Granulares",
+          "t003": "permissoes.jsonb",
+          "t004": "Chave/boolean por acao",
+          "t005": "Registry global",
+          "t006": "registerPermission()"
+        },
+        "subsections": [
+          "Define em permissions.ts",
+          "Registra via setup()",
+          "Verifica useAuth()"
+        ],
+        "forceDark": true,
+        "showEyebrow": true,
+        "showIndex": true,
+        "showMeta": true,
+        "accent": "blue"
+      }
+    },
+    {
+      "layout": "theme03_page034",
+      "props": {
+        "copy": {
+          "t001": "FLUXO DE DADOS",
+          "t002": "Da definicao a verificacao",
+          "t003": "Cadeia de seguranca",
+          "t004": "Definicao -> Registro -> Verificacao"
+        },
+        "chains": [
+          {
+            "tag": "Definicao",
+            "title": "Modulo define",
+            "nodes": [
+              "permissions.ts",
+              "registerPermission()",
+              "Registry",
+              "Chaves"
+            ],
+            "outcomes": [
+              "Chaves disponiveis",
+              "Defaults por ambiente"
+            ]
+          },
+          {
+            "tag": "Persistencia",
+            "title": "Supabase armazena",
+            "nodes": [
+              "Tabela permissoes",
+              "JSONB column",
+              "AuthProvider"
+            ],
+            "outcomes": [
+              "State no frontend",
+              "Permissoes carregadas"
+            ]
+          },
+          {
+            "tag": "Verificacao",
+            "title": "Guards protegem",
+            "nodes": [
+              "RequirePermission",
+              "modulosAcesso",
+              "permissoes[key]"
+            ],
+            "outcomes": [
+              "Acesso liberado",
+              "Redirect se falhar"
+            ]
+          }
+        ],
+        "forceDark": true,
+        "showEyebrow": true,
+        "showConnector": true,
+        "showOutcome": true,
+        "chainCount": 3,
+        "accent": "blue"
+      }
+    },
+    {
+      "layout": "theme03_page048",
+      "props": {
+        "copy": {
+          "t001": "FLUXO COMPLETO",
+          "t002": "Do login a interface",
+          "t003": "Jornada do usuario",
+          "t004": "5 estagios de filtragem progressiva"
+        },
+        "stages": [
+          {
+            "cn": "Login",
+            "en": "onAuthStateChange",
+            "behaviour": "Dispara fetchProfile",
+            "score": 0.9,
+            "mood": "Inicio",
+            "opp": "Auth"
+          },
+          {
+            "cn": "Profile",
+            "en": "Busca dados",
+            "behaviour": "is_super_admin, role",
+            "score": 0.8,
+            "mood": "Identificacao",
+            "opp": "Perfil"
+          },
+          {
+            "cn": "Permissoes",
+            "en": "Supabase query",
+            "behaviour": "Carrega JSONB",
+            "score": 0.7,
+            "mood": "Carga",
+            "opp": "Dados"
+          },
+          {
+            "cn": "Registry",
+            "en": "setup() modulos",
+            "behaviour": "Registra permissoes",
+            "score": 0.85,
+            "mood": "Registro",
+            "opp": "Config"
+          },
+          {
+            "cn": "UI",
+            "en": "Guards filtram",
+            "behaviour": "Rotas e botoes",
+            "score": 0.95,
+            "mood": "Pronto",
+            "opp": "Acesso"
+          }
+        ],
+        "forceDark": true,
+        "showEyebrow": true,
+        "showBehaviour": true,
+        "showCurve": false,
+        "showOpportunity": false,
+        "stageCount": 5,
+        "accent": "blue"
+      }
+    },
+    {
+      "layout": "theme03_page021",
+      "props": {
+        "eyebrow": "NIVEIS DE ACESSO",
+        "kicker": "Hierarquia",
+        "title": "Tres papeis",
+        "cornerLabel": "Comparativo",
+        "calloutLabel": "Regra de ouro",
+        "calloutBody": "Super admin recebe TUDO. Admin recebe modulos da empresa.",
+        "companies": [
+          {
+            "name": "Super Admin",
+            "en": "is_super_admin",
+            "tier": "Total"
+          },
+          {
+            "name": "Admin",
+            "en": "role=admin",
+            "tier": "Empresa"
+          },
+          {
+            "name": "Usuario",
+            "en": "role=user",
+            "tier": "Atribuido"
+          }
+        ],
+        "rows": [
+          {
+            "metric": "Rotas",
+            "en": "Routes",
+            "vals": [
+              "Todas",
+              "Modulos",
+              "Atribuidas"
+            ]
+          },
+          {
+            "metric": "Botoes",
+            "en": "Buttons",
+            "vals": [
+              "Todos",
+              "Por modulo",
+              "Por permissao"
+            ]
+          },
+          {
+            "metric": "Nav",
+            "en": "Navigation",
+            "vals": [
+              "Todos",
+              "Filtrados",
+              "Filtrados"
+            ]
+          },
+          {
+            "metric": "Guard",
+            "en": "Protection",
+            "vals": [
+              "Nenhum",
+              "RequirePerm",
+              "RequirePerm"
+            ]
+          },
+          {
+            "metric": "Config",
+            "en": "Settings",
+            "vals": [
+              "Global",
+              "Empresa",
+              "Nenhuma"
+            ]
+          }
+        ],
+        "forceDark": true,
+        "showEyebrow": true,
+        "showEdge": true,
+        "showRank": true,
+        "showCallout": true,
+        "accent": "blue"
+      }
+    },
+    {
+      "layout": "theme03_page039",
+      "props": {
+        "copy": {
+          "t001": "CONCLUSAO",
+          "t002": "Seguranca em camadas",
+          "t003": "Chave/boolean + modulo",
+          "t004": "Dupla verificacao",
+          "t005": "Frontend guards + RLS"
+        },
+        "forceDark": true,
+        "showEyebrow": true,
+        "showMark": true,
+        "showAttribution": true,
+        "accent": "blue"
+      }
+    }
+  ]
+}

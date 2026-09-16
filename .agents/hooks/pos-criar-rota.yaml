@@ -1,0 +1,14 @@
+name: pos-criar-rota
+description: Ações após criar rota
+trigger: apos_executar: criar-rota
+actions:
+  - atualizar_route_tree:
+      message: 'Route tree será atualizada automaticamente pelo TanStack Router plugin'
+
+  - sync_docs:
+      bash: node scripts/sync-docs.mjs
+      on_error: warn
+
+  - verificar_build:
+      bash: npm run build
+      on_error: warn

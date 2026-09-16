@@ -1,0 +1,61 @@
+name: nomenclature
+description: >
+  Nomenclatura real do projeto. Tabela completa em docs/agents/codigo.md.
+severity: error
+rules:
+  componente_de_modulo:
+    pattern: '^[A-Z][A-Za-z0-9]+\.tsx$'
+    message: Componente em src/features/*/components/ usa PascalCase
+    examples: [KanbanAvancado.tsx, NovaVisitaModal.tsx]
+
+  primitivo_ui:
+    scope: src/components/ui/
+    pattern: '^[a-z0-9-]+\.tsx$'
+    message: Primitivo shadcn em components/ui/ usa kebab-case
+    examples: [alert-dialog.tsx, page-header.tsx]
+
+  service:
+    pattern: '^[a-z0-9-]+\.service\.ts$'
+    message: Service usa <dominio>.service.ts
+    examples: [despesas.service.ts, carrinho.service.ts]
+
+  hook:
+    pattern: '^use[A-Z][A-Za-z0-9]+\.tsx?$'
+    message: Hook usa use<Dominio>
+    examples: [useDespesas.ts, useCatalogoCliente.ts]
+
+  arquivo_de_rota:
+    scope: src/routes/
+    pattern: '^[_a-z0-9$.-]+\.tsx$'
+    message: Arquivo de rota em dot.case espelhando o path; `_auth.` = layout autenticado
+    examples: [_auth.crm.pipeline.tsx, _auth.crm.cliente.$id.tsx]
+
+  teste:
+    scope: src/__tests__/
+    pattern: '^[a-zA-Z0-9.-]+\.test\.tsx?$'
+    message: Teste em src/__tests__/ espelhando o alvo
+    examples: [module.test.ts, permissions.test.ts]
+
+  diretorio:
+    pattern: '^[a-z0-9-]+$|^__tests__$'
+    message: Diretório em kebab-case
+    examples: [gerador-links, email-marketing]
+
+  rota:
+    pattern: '^/[a-z0-9-]+(/([a-z0-9-]+|\$[a-zA-Z]+))*$'
+    message: Path em kebab-case; param com $
+    examples: [/mapas/distribuidores, /crm/cliente/$id]
+
+  chave_snake:
+    applies_to: [permissao, tabela, coluna]
+    pattern: '^[a-z][a-z0-9_]*$'
+    message: snake_case com prefixo do módulo
+    examples: [crm_pipeline, catalogo_pedidos]
+
+  evento:
+    pattern: '^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$'
+    message: Evento em entidade.acao
+    examples: [despesa.aprovada, pedido.enviado]
+    note: cadastros tem eventos legados fora deste padrão — não replicar
+
+reference: docs/agents/codigo.md

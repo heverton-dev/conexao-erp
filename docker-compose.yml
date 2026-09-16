@@ -1,0 +1,44 @@
+version: "3.8"
+
+## --------------------------- ERP ODONTO --------------------------- ##
+
+services:
+  app:
+    # Imagem pré-construída no Docker Hub para uso em Portainer/Swarm
+    image: hevertonperes/erp-odonto:latest
+
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+    networks:
+      - network_conexao
+
+    environment:
+      - NODE_ENV=production
+      - TZ=America/Sao_Paulo
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+
+    ## 🌐 Configurações Traefik (Segurança e Redirecionamento)
+    labels:
+      - "traefik.enable=true"
+      # Roteador Seguro (HTTPS)
+      - "traefik.http.routers.erp_odonto.rule=Host(`erp.vpsconexao.org`)"
+      - "traefik.http.routers.erp_odonto.entrypoints=websecure"
+      - "traefik.http.routers.erp_odonto.tls.certresolver=letsencryptresolver"
+      # Redirecionamento Automático (HTTP -> HTTPS)
+      - "traefik.http.routers.erp_odonto_http.rule=Host(`erp.vpsconexao.org`)"
+      - "traefik.http.routers.erp_odonto_http.entrypoints=web"
+      - "traefik.http.routers.erp_odonto_http.middlewares=cadastros_redirect"
+      - "traefik.http.middlewares.cadastros_redirect.redirectscheme.scheme=https"
+      # Porta interna do container (Nginx)
+      - "traefik.http.services.erp_odonto.loadbalancer.server.port=80"
+
+## --------------------------- INFRA --------------------------- ##
+
+networks:
+  network_conexao:
+    external: true
+    name: network_conexao

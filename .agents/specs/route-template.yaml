@@ -1,0 +1,19 @@
+name: RouteTemplate
+description: Template para rotas protegidas do ERP Conexão
+schema:
+  type: object
+  required: [path, component, protected]
+  properties:
+    path:
+      type: string
+      pattern: '^/[a-z0-9-]+(/[a-z0-9-]+)*$'
+    component:
+      type: string
+      description: 'Nome do componente de página'
+    protected:
+      type: boolean
+      default: true
+    permissions:
+      type: array
+      items:
+        type: string

@@ -1,0 +1,86 @@
+name: criar-modulo-completo
+description: Workflow completo para criação de módulo
+steps:
+  - name: validar-nome
+    skill: criar-modulo
+    args:
+      acao: validar
+      nome: $nome_modulo
+
+  - name: criar-estrutura
+    skill: criar-modulo
+    args:
+      acao: criar-diretorios
+      nome: $nome_modulo
+    depends_on: validar-nome
+
+  # Single-tenant: NÃO criar empresa_id. RLS aberta. Ver docs/agents/banco.md
+  - name: criar-tabela
+    mcp: supabase_execute_sql
+    args:
+      sql: |
+        CREATE TABLE IF NOT EXISTS $nome_modulo (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          nome TEXT NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT now(),
+          updated_at TIMESTAMPTZ DEFAULT now()
+        );
+        ALTER TABLE $nome_modulo ENABLE ROW LEVEL SECURITY;
+        CREATE POLICY "${nome_modulo}_select" ON $nome_modulo FOR SELECT USING (true);
+        CREATE POLICY "${nome_modulo}_insert" ON $nome_modulo FOR INSERT WITH CHECK (true);
+        CREATE POLICY "${nome_modulo}_update" ON $nome_modulo FOR UPDATE USING (true);
+        CREATE POLICY "${nome_modulo}_delete" ON $nome_modulo FOR DELETE USING (true);
+    depends_on: criar-estrutura
+
+  - name: criar-migration
+    mcp: supabase_apply_migration
+    args:
+      nome: create_$nome_modulo
+      sql: $sql_migration
+    depends_on: criar-tabela
+
+  - name: registrar-modulo
+    skill: criar-modulo
+    args:
+      acao: registrar
+      nome: $nome_modulo
+    depends_on: criar-estrutura
+
+  - name: criar-permissoes
+    skill: adicionar-permissao
+    args:
+      modulo: $nome_modulo
+      # prefixo do módulo é obrigatório — ver .agents/rules/permission-conflicts.yaml
+      permissoes: ['${nome_modulo}_ver', '${nome_modulo}_editar', '${nome_modulo}_excluir']
+    depends_on: registrar-modulo
+
+  - name: criar-rotas
+    skill: criar-rota
+    args:
+      modulo: $nome_modulo
+      rotas: ['/$nome_modulo', '/$nome_modulo/dashboard']
+    depends_on: criar-permissoes
+
+  - name: criar-crud
+    skill: gerar-crud
+    args:
+      modulo: $nome_modulo
+      tabela: $nome_modulo
+    depends_on: criar-rotas
+
+  - name: criar-componentes
+    skill: criar-componente-modulo
+    args:
+      modulo: $nome_modulo
+      componentes: ['Lista', 'Formulario', 'Dashboard']
+    depends_on: criar-crud
+
+  # Rota nova exige import + addChildren em src/routeTree.gen.ts e
+  # registerModule() em src/main.tsx — nenhum dos dois é automático.
+  - name: gerar-agents-md
+    run: node scripts/sync-docs.mjs
+    depends_on: criar-componentes
+
+  - name: pre-flight
+    skill: pre-flight-check
+    depends_on: gerar-agents-md

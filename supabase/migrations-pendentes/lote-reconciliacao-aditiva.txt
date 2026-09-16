@@ -1,0 +1,32 @@
+# Opção C — reconciliação aditiva do banco (2026-08-03)
+#
+# Aplicar com:
+#   node scripts/db-aplicar-migrations.mjs --aplicar --lista supabase/migrations-pendentes/lote-reconciliacao-aditiva.txt
+#
+# Antes: node scripts/db-aplicar-migrations.mjs --lista <este arquivo>   (dry-run)
+# Depois: npm run db:verificar
+#
+# Todas aditivas (CREATE TABLE / ADD COLUMN / INDEX / POLICY / TRIGGER / INSERT).
+# O script torna cada uma idempotente em memória, sem editar os arquivos.
+#
+# EXCLUÍDAS de propósito:
+#   20260705000000_normalizar_tabelas.sql  -> renomeia 32 tabelas e quebraria 6
+#                                             funções que referenciam nome antigo
+#   20260711000000_catalogo_precos.sql     -> UPDATE ... SET preco = <fixo>
+#   20260721000000_remove_empresa_id_*.sql -> substituída pelas fases 1/2a/2b
+#   20260713000001_add_locked_conexoes.sql -> tem UPDATE (flag locked em 3 linhas);
+#                                             aplicar à parte com --permitir-dml
+00078_catalogo.sql
+00080_catalogo_clientes.sql
+00084_agentes_usage_log.sql
+20260712000001_catalogo_grupo_precos_tipo.sql
+20260712000002_catalogo_seed_default_categories.sql
+20260713000000_catalogo_sequencia_protetica.sql
+20260713110000_catalogo_add_ativo_all_tables.sql
+20260713120000_fix_add_ativo_all_catalogo_tables.sql
+20260725000000_provedores_ia.sql
+20260726000000_catalogo_add_estoque_precos.sql
+20260726010000_add_todos_diametros_kit_implantes.sql
+20260726180000_catalogo_pagamentos.sql
+20260726180100_catalogo_pedido_tracking.sql
+20260726180200_catalogo_baixa_estoque.sql

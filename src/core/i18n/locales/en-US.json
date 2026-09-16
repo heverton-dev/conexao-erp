@@ -1,0 +1,195 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "modules": {
+    "cadastros": {
+      "title": "Registrations",
+      "description": "PF/PJ registration management"
+    },
+    "empresas": {
+      "title": "Companies",
+      "description": "Company management"
+    },
+    "mapas": {
+      "title": "Maps",
+      "description": "Interactive commercial presence maps"
+    },
+    "nps": {
+      "title": "NPS",
+      "description": "Satisfaction surveys"
+    },
+    "funis": {
+      "title": "Funnels",
+      "description": "Kanban funnels"
+    },
+    "linktree": {
+      "title": "LinkTree",
+      "description": "Digital cards and QR Codes"
+    },
+    "hub": {
+      "title": "Hub",
+      "description": "Training and gamification platform"
+    }
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset password"
+  },
+  "catalogo": {
+    "language": {
+      "title": "Choose language",
+      "subtitle": "Select the store display language"
+    },
+    "nav": {
+      "home": "Home",
+      "navigation": "Navigation",
+      "viewBag": "View Bag"
+    },
+    "search": {
+      "placeholder": "Search by SKU, Line or Dimension...",
+      "noResults": "No results found"
+    },
+    "store": {
+      "products": "Products",
+      "loginToSee": "Log in to see prices and place orders.",
+      "browseAdd": "Browse the catalog and add items to your cart.",
+      "backToERP": "Back to ERP"
+    },
+    "cart": {
+      "title": "Your Bag",
+      "empty": "Your bag is empty",
+      "estimatedTotal": "Estimated total",
+      "checkout": "Checkout"
+    },
+    "product": {
+      "loading": "LOADING...",
+      "addToCart": "Add to Cart",
+      "close": "Close",
+      "singleSale": "Single Sale",
+      "yes": "Yes"
+    },
+    "login": {
+      "title": "Access Catalog",
+      "subtitle": "Log in to see prices and place orders",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Log in",
+      "backToStore": "Back to store",
+      "errorCredentials": "Incorrect email or password.",
+      "errorAuth": "Authentication error.",
+      "errorUnauthorized": "Unauthorized access. Request access from the company.",
+      "errorGeneric": "Login error. Please try again."
+    },
+    "orders": {
+      "title": "My Orders",
+      "empty": "No orders found.",
+      "loginRequired": "Log in to view your orders.",
+      "items": "items",
+      "date": "Date"
+    },
+    "favorites": {
+      "title": "My Favorites",
+      "empty": "No favorites yet.",
+      "loginRequired": "Log in to view your favorites.",
+      "remove": "Remove"
+    },
+    "quote": {
+      "title": "Quote",
+      "checkItems": "Check the items below.",
+      "product": "Product",
+      "qty": "Qty",
+      "unitPrice": "Unit Price",
+      "subtotal": "Subtotal",
+      "total": "Total",
+      "observations": "Notes:",
+      "approve": "Approve Quote",
+      "reject": "Reject",
+      "approved": "Quote approved successfully!",
+      "rejected": "Quote rejected.",
+      "approvedStatus": "Quote approved. Awaiting conversion to order.",
+      "rejectedStatus": "Quote rejected.",
+      "convertedStatus": "Quote converted to order.",
+      "expiredStatus": "Quote expired.",
+      "notFound": "Quote not found or link expired.",
+      "errorLoad": "Error loading quote.",
+      "errorApprove": "Error approving quote.",
+      "errorReject": "Error rejecting quote."
+    },
+    "categories": {
+      "implants": "Implants",
+      "components": "Components",
+      "kits": "Kits",
+      "promotions": "Promotions",
+      "connectionType": "implant connection type (Cone Morse, HE…)",
+      "family": "Families",
+      "familySubtitle": "anatomical implant family",
+      "lines": "Lines",
+      "linesSubtitle": "implant line/brand",
+      "selectImplant": "Select the Implant",
+      "selectDiameter": "Select the Diameter",
+      "all": "All",
+      "results": "result(s)",
+      "productsFound": "compatible product(s) found.",
+      "noImplants": "No implants found",
+      "noImplantsLine": "This line has no registered implants. Go back and select another line."
+    },
+    "checkout": {
+      "coupon": "Coupon",
+      "summary": "Order Summary",
+      "placeOrder": "Place Order",
+      "processing": "Processing...",
+      "cepPlaceholder": "Enter your ZIP code",
+      "searchCep": "Search",
+      "couponPlaceholder": "Coupon code",
+      "apply": "Apply",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "discount": "Discount",
+      "total": "Total",
+      "orderSuccess": "Order placed successfully!",
+      "orderNumber": "Order number"
+    },
+    "banner": {
+      "wantPrices": "Want to see prices and place orders? Request access to",
+      "requestAccess": "Request Access",
+      "requestWhatsApp": "Request via WhatsApp",
+      "sendEmail": "Send Email",
+      "sendRequest": "Send Request",
+      "sending": "Sending...",
+      "cancel": "Cancel",
+      "requestSent": "Request sent! We will contact you soon.",
+      "formTitle": "Request Access",
+      "name": "Your name *",
+      "email": "Your email *",
+      "phone": "Phone (optional)",
+      "message": "Message (optional)"
+    },
+    "consultant": {
+      "serving": "Serving:",
+      "selectClient": "Select client from portfolio",
+      "clearSelection": "Clear selection"
+    },
+    "step": "Step {{current}} of {{total}}"
+  }
+}

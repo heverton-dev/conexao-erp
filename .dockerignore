@@ -1,0 +1,16 @@
+node_modules
+dist
+.git
+*.md
+.DS_Store
+credentials.env
+vps.env
+scripts
+prints_telas
+analise-e-engenharia-reversa
+_temp/
+secret/
+.tanstack/
+.mimocode/
+test-results/
+json-exports/

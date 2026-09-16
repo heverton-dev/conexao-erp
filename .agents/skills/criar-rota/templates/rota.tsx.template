@@ -1,0 +1,9 @@
+import { createFileRoute } from '@tanstack/react-router'
+import { {{PAGINA_COMPONENTE}} } from '~/features/{{MODULO_KEY}}/pages/{{PAGINA_COMPONENTE}}'
+
+export const Route = createFileRoute('/{{MODULO_KEY}}/{{ROTA_PATH}}')({
+  component: {{PAGINA_COMPONENTE}},
+  beforeLoad: ({ context }) => {
+    return context
+  },
+})

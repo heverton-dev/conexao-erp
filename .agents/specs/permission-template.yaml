@@ -1,0 +1,15 @@
+name: PermissionTemplate
+description: Template para permissões do ERP Conexão
+schema:
+  type: object
+  required: [key, label, description, group]
+  properties:
+    key:
+      type: string
+      pattern: '^[a-z][a-z0-9_]*$'
+    label:
+      type: string
+    description:
+      type: string
+    group:
+      type: string

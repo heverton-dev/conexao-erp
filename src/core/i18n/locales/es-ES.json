@@ -1,0 +1,195 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "confirm": "Confirmar",
+    "yes": "Sí",
+    "no": "No"
+  },
+  "modules": {
+    "cadastros": {
+      "title": "Registros",
+      "description": "Gestión de registros PF/PJ"
+    },
+    "empresas": {
+      "title": "Empresas",
+      "description": "Gestión de empresas"
+    },
+    "mapas": {
+      "title": "Mapas",
+      "description": "Mapas interactivos de presencia comercial"
+    },
+    "nps": {
+      "title": "NPS",
+      "description": "Encuestas de satisfacción"
+    },
+    "funis": {
+      "title": "Funiles",
+      "description": "Funiles Kanban"
+    },
+    "linktree": {
+      "title": "LinkTree",
+      "description": "Tarjetas digitales y QR Codes"
+    },
+    "hub": {
+      "title": "Hub",
+      "description": "Plataforma de entrenamiento y gamificación"
+    }
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidó su contraseña?",
+    "resetPassword": "Restablecer contraseña"
+  },
+  "catalogo": {
+    "language": {
+      "title": "Elige el idioma",
+      "subtitle": "Selecciona el idioma de visualización de la tienda"
+    },
+    "nav": {
+      "home": "Inicio",
+      "navigation": "Navegación",
+      "viewBag": "Ver Bolsa"
+    },
+    "search": {
+      "placeholder": "Buscar por SKU, Línea o Dimensión...",
+      "noResults": "No se encontraron resultados"
+    },
+    "store": {
+      "products": "Productos",
+      "loginToSee": "Inicia sesión para ver precios y realizar pedidos.",
+      "browseAdd": "Navega por el catálogo y agrega artículos al carrito.",
+      "backToERP": "Volver al ERP"
+    },
+    "cart": {
+      "title": "Tu Bolsa",
+      "empty": "Tu bolsa está vacía",
+      "estimatedTotal": "Total estimado",
+      "checkout": "Finalizar Pedido"
+    },
+    "product": {
+      "loading": "CARGANDO...",
+      "addToCart": "Agregar",
+      "close": "Cerrar",
+      "singleSale": "Venta Individual",
+      "yes": "Sí"
+    },
+    "login": {
+      "title": "Acceder al Catálogo",
+      "subtitle": "Inicia sesión para ver precios y realizar pedidos",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "submit": "Iniciar sesión",
+      "backToStore": "Volver a la tienda",
+      "errorCredentials": "Correo o contraseña incorrectos.",
+      "errorAuth": "Error de autenticación.",
+      "errorUnauthorized": "Acceso no autorizado. Solicite acceso a la empresa.",
+      "errorGeneric": "Error al iniciar sesión. Inténtelo de nuevo."
+    },
+    "orders": {
+      "title": "Mis Pedidos",
+      "empty": "No se encontraron pedidos.",
+      "loginRequired": "Inicia sesión para ver tus pedidos.",
+      "items": "artículos",
+      "date": "Fecha"
+    },
+    "favorites": {
+      "title": "Mis Favoritos",
+      "empty": "Aún no tienes favoritos.",
+      "loginRequired": "Inicia sesión para ver tus favoritos.",
+      "remove": "Eliminar"
+    },
+    "quote": {
+      "title": "Presupuesto",
+      "checkItems": "Revisa los artículos a continuación.",
+      "product": "Producto",
+      "qty": "Cant",
+      "unitPrice": "Precio Unit.",
+      "subtotal": "Subtotal",
+      "total": "Total",
+      "observations": "Observaciones:",
+      "approve": "Aprobar Presupuesto",
+      "reject": "Rechazar",
+      "approved": "¡Presupuesto aprobado con éxito!",
+      "rejected": "Presupuesto rechazado.",
+      "approvedStatus": "Presupuesto aprobado. Esperando conversión a pedido.",
+      "rejectedStatus": "Presupuesto rechazado.",
+      "convertedStatus": "Presupuesto convertido en pedido.",
+      "expiredStatus": "Presupuesto expirado.",
+      "notFound": "Presupuesto no encontrado o enlace expirado.",
+      "errorLoad": "Error al cargar el presupuesto.",
+      "errorApprove": "Error al aprobar el presupuesto.",
+      "errorReject": "Error al rechazar el presupuesto."
+    },
+    "categories": {
+      "implants": "Implantes",
+      "components": "Componentes",
+      "kits": "Kits",
+      "promotions": "Promociones",
+      "connectionType": "tipo de conexión del implante (Cone Morse, HE…)",
+      "family": "Familias",
+      "familySubtitle": "familia anatómica del implante",
+      "lines": "Líneas",
+      "linesSubtitle": "línea/marca del implante",
+      "selectImplant": "Selecciona el Implante",
+      "selectDiameter": "Selecciona el Diámetro",
+      "all": "Todos",
+      "results": "resultado(s)",
+      "productsFound": "producto(s) compatible(s) encontrado(s).",
+      "noImplants": "No se encontraron implantes",
+      "noImplantsLine": "Esta línea no tiene implantes registrados. Vuelve y selecciona otra línea."
+    },
+    "checkout": {
+      "coupon": "Cupón",
+      "summary": "Resumen del Pedido",
+      "placeOrder": "Confirmar Pedido",
+      "processing": "Procesando...",
+      "cepPlaceholder": "Ingresa tu código postal",
+      "searchCep": "Buscar",
+      "couponPlaceholder": "Código de cupón",
+      "apply": "Aplicar",
+      "subtotal": "Subtotal",
+      "shipping": "Envío",
+      "discount": "Descuento",
+      "total": "Total",
+      "orderSuccess": "¡Pedido realizado con éxito!",
+      "orderNumber": "Número de pedido"
+    },
+    "banner": {
+      "wantPrices": "¿Quieres ver precios y hacer pedidos? Solicita acceso a",
+      "requestAccess": "Solicitar Acceso",
+      "requestWhatsApp": "Solicitar por WhatsApp",
+      "sendEmail": "Enviar Correo",
+      "sendRequest": "Enviar Solicitud",
+      "sending": "Enviando...",
+      "cancel": "Cancelar",
+      "requestSent": "¡Solicitud enviada! Nos pondremos en contacto pronto.",
+      "formTitle": "Solicitar Acceso",
+      "name": "Tu nombre *",
+      "email": "Tu correo *",
+      "phone": "Teléfono (opcional)",
+      "message": "Mensaje (opcional)"
+    },
+    "consultant": {
+      "serving": "Atendiendo:",
+      "selectClient": "Seleccionar cliente de la cartera",
+      "clearSelection": "Limpiar selección"
+    },
+    "step": "Paso {{current}} de {{total}}"
+  }
+}

@@ -1,0 +1,44 @@
+import * as React from 'react'
+import { cva, type VariantProps } from 'class-variance-authority'
+import { cn } from '~/core/utils/cn'
+
+const {{COMPONENTE_NOME_LOWER}}Variants = cva(
+  'base-classes-here',
+  {
+    variants: {
+      variant: {
+        default: 'default-classes',
+        destructive: 'destructive-classes',
+        outline: 'outline-classes',
+      },
+      size: {
+        default: 'default-size',
+        sm: 'small-size',
+        lg: 'large-size',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'default',
+    },
+  }
+)
+
+export interface {{COMPONENTE_NOME}}Props
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof {{COMPONENTE_NOME_LOWER}}Variants> {
+  // Props específicas
+}
+
+export const {{COMPONENTE_NOME}} = React.forwardRef<HTMLDivElement, {{COMPONENTE_NOME}}Props>(
+  ({ className, variant, size, ...props }, ref) => {
+    return (
+      <div
+        className={cn({{COMPONENTE_NOME_LOWER}}Variants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+{{COMPONENTE_NOME}}.displayName = '{{COMPONENTE_NOME}}'

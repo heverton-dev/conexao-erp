@@ -1,0 +1,13 @@
+name: pos-criar-modulo
+description: Ações após criar módulo
+trigger: apos_executar: criar-modulo
+actions:
+  - registrar_no_sistema:
+      message: 'Módulo $nome criado com sucesso'
+
+  - sugerir_proximos_passos:
+      message: 'Próximos passos: criar componentes, adicionar testes, documentar'
+
+  - sync_docs:
+      bash: node scripts/sync-docs.mjs
+      on_error: warn

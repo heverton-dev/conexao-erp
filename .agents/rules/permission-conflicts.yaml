@@ -1,0 +1,13 @@
+name: permission-conflicts
+description: Valida conflitos de permissões
+severity: error
+rules:
+  nome_unico:
+    message: 'Nome de permissão deve ser único'
+    validation: check_unique_in_registry
+  formato_snake_case:
+    pattern: '^[a-z][a-z0-9_]*$'
+    message: 'Permissões devem usar snake_case'
+  prefixo_modulo:
+    message: 'Permissão deve ter prefixo do módulo'
+    validation: starts_with_module_key

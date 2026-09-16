@@ -1,0 +1,26 @@
+name: gerar-crud-completo
+description: Gera CRUD completo com service e hooks
+steps:
+  - name: descrever-tabela
+    mcp: supabase_describe_table
+    args:
+      table_name: $tabela
+
+  - name: gerar-service
+    skill: gerar-crud
+    args:
+      modulo: $modulo
+      tabela: $tabela
+      schema: $schema
+    depends_on: descrever-tabela
+
+  - name: gerar-hooks
+    skill: gerar-crud
+    args:
+      acao: gerar-hooks
+      modulo: $modulo
+    depends_on: gerar-service
+
+  - name: validar-build
+    bash: npm run build
+    depends_on: gerar-hooks

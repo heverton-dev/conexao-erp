@@ -1,0 +1,34 @@
+import type { PermissionDefinition } from "~/registry";
+
+export const {{MODULO_PASCAL}}_PERMISSIONS: PermissionDefinition[] = [
+  {
+    key: "{{MODULO_KEY}}_dashboard",
+    label: "Dashboard {{MODULO_NOME}}",
+    description: "Acessar o dashboard do módulo",
+    group: "{{MODULO_NOME}}",
+  },
+  {
+    key: "{{MODULO_KEY}}_ver",
+    label: "Ver {{MODULO_NOME}}",
+    description: "Visualizar dados do módulo",
+    group: "{{MODULO_NOME}}",
+  },
+  {
+    key: "{{MODULO_KEY}}_criar",
+    label: "Criar {{MODULO_NOME}}",
+    description: "Criar novos registros no módulo",
+    group: "{{MODULO_NOME}}",
+  },
+  {
+    key: "{{MODULO_KEY}}_editar",
+    label: "Editar {{MODULO_NOME}}",
+    description: "Editar registros existentes no módulo",
+    group: "{{MODULO_NOME}}",
+  },
+  {
+    key: "{{MODULO_KEY}}_excluir",
+    label: "Excluir {{MODULO_NOME}}",
+    description: "Excluir registros do módulo",
+    group: "{{MODULO_NOME}}",
+  },
+];

@@ -1,0 +1,5 @@
+rules:
+  - id: R-01
+    name: "Limitação de caracteres"
+    description: "Utiliza apenas 40 caracteres para definir um conceito"
+    severity: "CRITICAL"

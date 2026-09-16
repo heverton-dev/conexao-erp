@@ -1,0 +1,14 @@
+{
+  "name": "mcp-tanstack",
+  "version": "1.0.0",
+  "description": "MCP server para TanStack Router",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

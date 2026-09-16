@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Economia de Tokens em IDEs Agênticas</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --gold: #c9a655;
+  --gold-dim: #a08040;
+  --gold-glow: #e8c96a;
+  --bg: #0a0a0f;
+  --bg-card: #12121a;
+  --bg-elevated: #1a1a25;
+  --text: #e8e8f0;
+  --text-dim: #8888a0;
+  --accent-blue: #4a9eff;
+  --accent-green: #4ade80;
+  --accent-red: #ef4444;
+  --accent-purple: #a78bfa;
+  --accent-orange: #fb923c;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+}
+
+.slide {
+  width: 100%;
+  height: 100vh;
+  display: none;
+  padding: 5vh 5vw;
+  position: relative;
+  overflow: hidden;
+}
+
+.slide.active { display: flex; flex-direction: column; }
+
+/* Animations */
+@keyframes fadeInUp { from { opacity:0; transform:translateY(40px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeInLeft { from { opacity:0; transform:translateX(-60px); } to { opacity:1; transform:translateX(0); } }
+@keyframes fadeInRight { from { opacity:0; transform:translateX(60px); } to { opacity:1; transform:translateX(0); } }
+@keyframes scaleIn { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+@keyframes pulse { 0%,100% { opacity:0.4; } 50% { opacity:1; } }
+@keyframes slideDown { from { opacity:0; transform:translateY(-30px); } to { opacity:1; transform:translateY(0); } }
+@keyframes glow { 0%,100% { box-shadow:0 0 20px rgba(201,166,85,0.2); } 50% { box-shadow:0 0 40px rgba(201,166,85,0.5); } }
+@keyframes typewriter { from { width:0; } to { width:100%; } }
+@keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
+@keyframes countUp { from { opacity:0; transform:scale(0.5); } to { opacity:1; transform:scale(1); } }
+@keyframes slideIn { from { opacity:0; transform:translateX(60px); } to { opacity:1; transform:translateX(0); } }
+@keyframes slideInLeft { from { opacity:0; transform:translateX(-60px); } to { opacity:1; transform:translateX(0); } }
+@keyframes fadeScale { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+
+.slide-entering { animation: slideIn 0.4s ease-out; }
+
+.anim-1 { animation: fadeInUp 0.6s ease-out 0.1s both; }
+.anim-2 { animation: fadeInUp 0.6s ease-out 0.25s both; }
+.anim-3 { animation: fadeInUp 0.6s ease-out 0.4s both; }
+.anim-4 { animation: fadeInUp 0.6s ease-out 0.55s both; }
+.anim-5 { animation: fadeInUp 0.6s ease-out 0.7s both; }
+.anim-left { animation: fadeInLeft 0.7s ease-out 0.2s both; }
+.anim-right { animation: fadeInRight 0.7s ease-out 0.2s both; }
+.anim-scale { animation: scaleIn 0.5s ease-out 0.3s both; }
+.anim-down { animation: slideDown 0.5s ease-out 0.2s both; }
+
+.slide-number {
+  position: absolute;
+  bottom: 2vh;
+  right: 3vw;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(10px, 1vw, 14px);
+  color: var(--gold-dim);
+  letter-spacing: 2px;
+}
+
+.progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-glow));
+  transition: width 0.4s ease;
+}
+
+h1 { font-size: clamp(32px, 5vw, 64px); font-weight: 900; line-height: 1.1; }
+h2 { font-size: clamp(24px, 3.5vw, 48px); font-weight: 700; line-height: 1.2; }
+h3 { font-size: clamp(16px, 2.2vw, 32px); font-weight: 600; }
+p, li { font-size: clamp(14px, 1.6vw, 22px); line-height: 1.6; color: var(--text-dim); }
+
+.gold { color: var(--gold); }
+.green { color: var(--accent-green); }
+.red { color: var(--accent-red); }
+.blue { color: var(--accent-blue); }
+.purple { color: var(--accent-purple); }
+.orange { color: var(--accent-orange); }
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid rgba(201,166,85,0.15);
+  border-radius: clamp(8px, 1.2vw, 16px);
+  padding: clamp(12px, 2vw, 32px);
+  transition: all 0.3s;
+}
+.card:hover { border-color: var(--gold); transform: translateY(-2px); }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(12px, 2vw, 32px); }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: clamp(10px, 1.5vw, 24px); }
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: clamp(8px, 1.2vw, 20px); }
+
+@media (max-width: 900px) {
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .comparison { flex-direction: column; }
+}
+
+.tag {
+  display: inline-block;
+  padding: clamp(2px, 0.4vw, 4px) clamp(8px, 1vw, 14px);
+  border-radius: 20px;
+  font-size: clamp(10px, 1vw, 13px);
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.tag-gold { background: rgba(201,166,85,0.15); color: var(--gold); }
+.tag-blue { background: rgba(74,158,255,0.15); color: var(--accent-blue); }
+.tag-green { background: rgba(74,222,128,0.15); color: var(--accent-green); }
+.tag-red { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+
+.big-number {
+  font-size: clamp(36px, 5vw, 72px);
+  font-weight: 900;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1;
+}
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(201,166,85,0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  color: var(--gold);
+  word-break: break-all;
+}
+
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 20px;
+}
+.flow-arrow::after {
+  content: '→';
+  color: var(--gold);
+  font-size: 28px;
+}
+
+.divider {
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  margin: 16px 0;
+}
+
+.subtitle {
+  font-size: 24px;
+  color: var(--text-dim);
+  font-weight: 300;
+  margin-top: 12px;
+}
+
+.icon-circle {
+  width: clamp(36px, 4vw, 56px);
+  height: clamp(36px, 4vw, 56px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(16px, 1.8vw, 24px);
+  flex-shrink: 0;
+}
+
+.terminal {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: clamp(6px, 1vw, 12px);
+  padding: clamp(12px, 1.5vw, 24px);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(11px, 1.1vw, 16px);
+  line-height: 1.8;
+  color: #c9d1d9;
+  overflow-x: auto;
+}
+.terminal .prompt { color: var(--accent-green); }
+.terminal .comment { color: #6e7681; }
+.terminal .highlight { color: var(--gold); }
+.terminal .error { color: var(--accent-red); }
+
+.comparison { display: flex; gap: clamp(16px, 2.5vw, 40px); align-items: stretch; flex-wrap: wrap; }
+.comparison > div { flex: 1; }
+.comparison .bad { border-color: rgba(239,68,68,0.3); }
+.comparison .good { border-color: rgba(74,222,128,0.3); }
+.comparison .label { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; }
+.comparison .label.bad { color: var(--accent-red); }
+.comparison .label.good { color: var(--accent-green); }
+
+.nav-hint {
+  position: absolute;
+  bottom: 2vh;
+  left: 3vw;
+  font-size: clamp(9px, 0.8vw, 12px);
+  color: var(--text-dim);
+  opacity: 0.5;
+}
+
+/* Cover slide special */
+.cover-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 50%, rgba(201,166,85,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 80%, rgba(74,158,255,0.05) 0%, transparent 50%);
+}
+
+@media (max-width: 900px) {
+  :root { --deco-display: none; }
+  .slide { padding: 3vh 4vw; }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .comparison { flex-direction: column; }
+  h1 { font-size: clamp(28px, 7vw, 48px); }
+  h2 { font-size: clamp(20px, 5vw, 36px); }
+  h3 { font-size: clamp(14px, 3.5vw, 24px); }
+  p, li { font-size: clamp(12px, 2.8vw, 18px); }
+  .big-number { font-size: clamp(28px, 8vw, 48px); }
+  .terminal { font-size: clamp(9px, 2.5vw, 13px); padding: clamp(8px, 2vw, 16px); }
+  .icon-circle { width: 36px; height: 36px; font-size: 16px; }
+  .card { padding: clamp(8px, 2vw, 16px); }
+}
+
+@media (min-width: 901px) and (max-width: 1400px) {
+  .slide { padding: 4vh 4vw; }
+}
+
+@media (min-width: 1401px) {
+  .slide { padding: 5vh 5vw; }
+}
+
+/* Decorative elements */
+.deco-line {
+  position: absolute;
+  width: 200px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+const TOTAL_SLIDES = 20;
+
+function SlideFrame({ current, children }) {
+  return (
+    <div className="slide active slide-entering" key={current} style={{position:'relative'}}>
+      <div className="progress-bar" style={{width: `${((current+1)/TOTAL_SLIDES)*100}%`}} />
+      {children}
+      <div className="slide-number">{String(current+1).padStart(2,'0')} / {TOTAL_SLIDES}</div>
+      <div className="nav-hint">← → ou toque para navegar</div>
+    </div>
+  );
+}
+
+/* ===== SLIDE 1: COVER ===== */
+function Slide01() {
+  return (
+    <SlideFrame current={0}>
+      <div className="cover-bg" />
+      <div style={{flex:1, display:'flex', flexDirection:'column', justifyContent:'center', position:'relative', zIndex:1}}>
+        <div className="anim-1">
+          <span className="tag tag-gold">Guia Definitivo · Julho 2026</span>
+        </div>
+        <h1 className="anim-2" style={{marginTop:'2vh'}}>
+          <span className="gold">Economia de Tokens</span><br/>
+          em IDEs Agênticas
+        </h1>
+        <p className="anim-3 subtitle" style={{maxWidth:'60vw', marginTop:'2vh'}}>
+          Maximizar cada centavo em IA Generativa — do system prompt ao output final
+        </p>
+        <div className="divider anim-4" style={{marginTop:'3vh'}} />
+        <div className="anim-5" style={{display:'flex', gap:'2vw', marginTop:'3vh', flexWrap:'wrap'}}>
+          {['Oh My Pi','OpenCode','Claude Code','Cursor','Cline','Aider'].map(ide => (
+            <span key={ide} style={{fontSize:'clamp(11px,1vw,14px)', color:'var(--text-dim)', padding:'6px 16px', border:'1px solid rgba(201,166,85,0.2)', borderRadius:8}}>{ide}</span>
+          ))}
+        </div>
+      </div>
+      <div className="anim-scale" style={{position:'absolute', right:'8vw', top:'50%', transform:'translateY(-50%)', display:'var(--deco-display, flex)'}}>
+        <div style={{width:'clamp(120px,18vw,300px)', height:'clamp(120px,18vw,300px)', borderRadius:'50%', border:'2px solid rgba(201,166,85,0.15)', display:'flex', alignItems:'center', justifyContent:'center', animation:'glow 3s ease-in-out infinite'}}>
+          <div className="big-number gold" style={{fontSize:'clamp(40px,5vw,80px)'}}>T</div>
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 2: QUOTES ===== */
+function Slide02() {
+  return (
+    <SlideFrame current={1}>
+      <div style={{flex:1, display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center', textAlign:'center'}}>
+        <div className="anim-1" style={{fontSize:120, color:'var(--gold-dim)', opacity:0.3, fontFamily:'Georgia', lineHeight:1}}>"</div>
+        <h2 className="anim-2" style={{maxWidth:1000, fontWeight:300, fontSize:40, lineHeight:1.5}}>
+          O contexto é o novo <span className="gold">petróleo</span>.<br/>
+          Quem gerencia bem, produz mais com menos.
+        </h2>
+        <div className="divider anim-3" style={{margin:'32px auto'}} />
+        <p className="anim-4" style={{fontSize:18, color:'var(--text-dim)'}}>
+          Cada token no system prompt custa <span className="gold">N×</span> ao longo da sessão
+        </p>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 3: O QUE É UM HARNESS ===== */
+function Slide03() {
+  return (
+    <SlideFrame current={2}>
+      <span className="tag tag-blue anim-1">Parte 0</span>
+      <h2 className="anim-2" style={{marginTop:16}}>O que é um <span className="blue">Harness Agêntico</span></h2>
+      <div className="divider anim-2" />
+      <p className="anim-3" style={{fontSize:22, maxWidth:900, marginBottom:40}}>
+        A camada de software entre você e o LLM — o orquestrador que conecta UI, contexto e tools.
+      </p>
+      <div className="grid-4 anim-4">
+        {[
+          {icon:'🖥️', title:'UI Layer', desc:'Chat, editor, indicadores de status'},
+          {icon:'🧠', title:'Context Manager', desc:'Monta system prompt, gerencia histórico'},
+          {icon:'🔧', title:'Tool Router', desc:'Executa bash, read, edit, MCP'},
+          {icon:'⚡', title:'LLM Gateway', desc:'Envia prompt, recebe resposta em streaming'},
+        ].map((c,i) => (
+          <div key={i} className="card" style={{textAlign:'center'}}>
+            <div className="icon-circle" style={{background:'rgba(74,158,255,0.1)', margin:'0 auto 16px'}}>{c.icon}</div>
+            <h3 style={{fontSize:18, marginBottom:8}}>{c.title}</h3>
+            <p style={{fontSize:15}}>{c.desc}</p>
+          </div>
+        ))}
+      </div>
+      <div className="anim-5" style={{marginTop:32, display:'flex', gap:24}}>
+        <div className="card" style={{flex:1, display:'flex', alignItems:'center', gap:16}}>
+          <span className="tag tag-green">IDE</span>
+          <span style={{fontSize:16}}>VS Code, Cursor, Oh My Pi</span>
+        </div>
+        <div className="card" style={{flex:1, display:'flex', alignItems:'center', gap:16}}>
+          <span className="tag tag-gold">Harness</span>
+          <span style={{fontSize:16}}>OpenCode, Claude Code, Cline</span>
+        </div>
+        <div className="card" style={{flex:1, display:'flex', alignItems:'center', gap:16}}>
+          <span className="tag tag-blue">LLM</span>
+          <span style={{fontSize:16}}>Claude, GPT-4o, Gemini, DeepSeek</span>
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 4: FLUXO COMPLETO ===== */
+function Slide04() {
+  return (
+    <SlideFrame current={3}>
+      <span className="tag tag-blue anim-1">Capítulo 0.2</span>
+      <h2 className="anim-2" style={{marginTop:16}}>O <span className="gold">Fluxo Completo</span> de uma Chamada</h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'flex', gap:24, marginTop:32, flex:1}}>
+        <div style={{flex:'0 0 260px'}}>
+          {[
+            {phase:'1. Montagem', tokens:'5-15K', color:'var(--accent-blue)'},
+            {phase:'2. Envio ao LLM', tokens:'HTTP POST', color:'var(--accent-purple)'},
+            {phase:'3. Processamento', tokens:'N tool calls', color:'var(--gold)'},
+            {phase:'4. Output', tokens:'Texto + tools', color:'var(--accent-green)'},
+          ].map((s,i) => (
+            <div key={i} className="card" style={{marginBottom:16, borderLeftColor:s.color, borderLeftWidth:3}}>
+              <div style={{fontSize:13, color:s.color, fontWeight:700, letterSpacing:1}}>{s.phase}</div>
+              <div style={{fontSize:15, marginTop:4}}>{s.tokens}</div>
+            </div>
+          ))}
+        </div>
+        <div className="terminal" style={{flex:1, fontSize:15}}>
+          <div><span className="comment">// Usuário digita:</span></div>
+          <div><span className="prompt">"</span>Crie um componente Button<span className="prompt">"</span></div>
+          <br/>
+          <div><span className="comment">// Fase 1 — System Prompt montado:</span></div>
+          <div>  Instruções base: <span className="highlight">~1-2K</span> tokens</div>
+          <div>  AGENTS.md: <span className="highlight">~1-3K</span> tokens</div>
+          <div>  Tools disponíveis: <span className="highlight">~2-5K</span> tokens</div>
+          <div>  <span className="highlight">TOTAL: ~5-15K tokens por chamada</span></div>
+          <br/>
+          <div><span className="comment">// Fase 3 — Ciclo de tool calls:</span></div>
+          <div>  User → LLM → <span className="highlight">grep</span> → LLM → <span className="highlight">read</span> → LLM → <span className="highlight">edit</span> → Output</div>
+          <br/>
+          <div><span className="comment">// Cada turno = 1 chamada separada ao LLM</span></div>
+          <div><span className="error">// Uma tarefa "simples" = 5-10 chamadas</span></div>
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 5: ANATOMIA DO TOKEN ===== */
+function Slide05() {
+  return (
+    <SlideFrame current={4}>
+      <span className="tag tag-gold anim-1">Parte I · Fundamentos</span>
+      <h2 className="anim-2" style={{marginTop:16}}>Anatomia de um <span className="gold">Token</span></h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'flex', gap:40, marginTop:32, flex:1}}>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:24, marginBottom:20}}>O que é um token (de verdade)</h3>
+          <p style={{marginBottom:24}}>
+            Um token <strong style={{color:'var(--accent-red)'}}>não</strong> é uma palavra. É a unidade atômica que o tokenizer do modelo usa para comprimir texto.
+          </p>
+          <div className="terminal" style={{fontSize:14}}>
+            <div><span className="highlight">import React from 'react'</span> → 6 tokens</div>
+            <div><span className="highlight">  useEffect(() =&gt; {'{'}</span> → 4 tokens</div>
+            <div><span className="highlight">https://supabase.co</span> → 5 tokens</div>
+            <div><span className="highlight">src/features/catalogo/services/pedidos.service.ts</span> → 12 tokens</div>
+            <br/>
+            <div><span className="comment">Código: ~1.3 tokens/palavra</span></div>
+            <div><span className="error">URLs e paths são CAROS</span></div>
+          </div>
+        </div>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:24, marginBottom:20}}>4 Fontes de Consumo</h3>
+          {[
+            {name:'System Prompt', pct:'30-50%', color:'var(--accent-blue)', icon:'📋'},
+            {name:'Histórico', pct:'20-40%', color:'var(--accent-purple)', icon:'📚'},
+            {name:'Input do Usuário', pct:'1-5%', color:'var(--accent-green)', icon:'💬'},
+            {name:'Output do Modelo', pct:'15-30%', color:'var(--gold)', icon:'⚡'},
+          ].map((s,i) => (
+            <div key={i} className="card" style={{display:'flex', alignItems:'center', gap:16, marginBottom:12}}>
+              <span style={{fontSize:24}}>{s.icon}</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:16, fontWeight:600}}>{s.name}</div>
+                <div style={{height:6, background:'rgba(255,255,255,0.05)', borderRadius:3, marginTop:6}}>
+                  <div style={{height:'100%', width:s.pct, background:s.color, borderRadius:3, transition:'width 1s'}} />
+                </div>
+              </div>
+              <span style={{fontSize:20, fontWeight:700, color:s.color, fontFamily:'JetBrains Mono'}}>{s.pct}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 6: ONDE O DINHEIRO VAI ===== */
+function Slide06() {
+  return (
+    <SlideFrame current={5}>
+      <span className="tag tag-red anim-1">Insight Crítico</span>
+      <h2 className="anim-2" style={{marginTop:16}}>Onde o <span className="red">Dinheiro</span> Realmente Vai</h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'flex', gap:40, marginTop:32, flex:1}}>
+        <div style={{flex:1}}>
+          <div className="card" style={{borderColor:'rgba(239,68,68,0.3)', marginBottom:24}}>
+            <h3 className="red" style={{fontSize:20, marginBottom:16}}>⚠️ O System Prompt é reenviado em TODA chamada</h3>
+            <div className="terminal" style={{fontSize:14}}>
+              <div>System prompt: <span className="highlight">8K</span> tokens</div>
+              <div>Sessão com <span className="highlight">10</span> tool calls:</div>
+              <div style={{marginTop:8}}><span className="error">Custo real = 8K × 10 = 80K tokens</span></div>
+              <br/>
+              <div><span className="comment">Se o system prompt fosse 4K:</span></div>
+              <div><span className="highlight">Custo = 4K × 10 = 40K (50% de economia!)</span></div>
+            </div>
+          </div>
+          <div className="card">
+            <h3 style={{fontSize:18, marginBottom:12}}>Regra de Ouro</h3>
+            <p style={{fontSize:18}}>
+              Cada token no system prompt custa <span className="gold">N×</span> ao longo da sessão, onde N = número de turnos.
+            </p>
+          </div>
+        </div>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:24, marginBottom:20}}>Crescimento em 10 Turnos</h3>
+          {[
+            {turn:'Turno 1', tokens:'5.200', pct:12},
+            {turn:'Turno 3', tokens:'10.200', pct:23},
+            {turn:'Turno 5', tokens:'20.200', pct:45},
+            {turn:'Turno 10', tokens:'45.200', pct:100},
+          ].map((t,i) => (
+            <div key={i} style={{marginBottom:16}}>
+              <div style={{display:'flex', justifyContent:'space-between', marginBottom:6}}>
+                <span style={{fontSize:16}}>{t.turn}</span>
+                <span className="gold" style={{fontFamily:'JetBrains Mono', fontSize:16}}>{t.tokens} tokens</span>
+              </div>
+              <div style={{height:12, background:'rgba(255,255,255,0.05)', borderRadius:6}}>
+                <div style={{height:'100%', width:`${t.pct}%`, background:`linear-gradient(90deg, var(--gold), var(--accent-red))`, borderRadius:6, transition:'width 1.5s'}} />
+              </div>
+            </div>
+          ))}
+          <p style={{fontSize:15, marginTop:20}}>
+            TOTAL INPUT na sessão: <span className="red" style={{fontWeight:700}}>~180K tokens</span>
+          </p>
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 7: JANELA DE CONTEXTO ===== */
+function Slide07() {
+  return (
+    <SlideFrame current={6}>
+      <span className="tag tag-blue anim-1">Capítulo 2</span>
+      <h2 className="anim-2" style={{marginTop:16}}>A <span className="blue">Janela de Contexto</span></h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'flex', gap:40, marginTop:32, flex:1}}>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>Capacidade por Modelo</h3>
+          {[
+            {model:'Claude 3.5 Sonnet', window:'200K', useful:'~160K', bar:80},
+            {model:'GPT-4o', window:'128K', useful:'~100K', bar:50},
+            {model:'Gemini 1.5 Pro', window:'2M', useful:'~1.5M', bar:100},
+            {model:'DeepSeek V3', window:'128K', useful:'~100K', bar:50},
+          ].map((m,i) => (
+            <div key={i} className="card" style={{marginBottom:12, padding:'16px 24px'}}>
+              <div style={{display:'flex', justifyContent:'space-between', marginBottom:8}}>
+                <span style={{fontWeight:600}}>{m.model}</span>
+                <span className="gold" style={{fontFamily:'JetBrains Mono'}}>{m.window}</span>
+              </div>
+              <div style={{height:6, background:'rgba(255,255,255,0.05)', borderRadius:3}}>
+                <div style={{height:'100%', width:`${m.bar}%`, background:'var(--accent-blue)', borderRadius:3}} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>Densidade de Contexto</h3>
+          <p style={{marginBottom:20}}>Nem todo token tem o mesmo valor:</p>
+          {[
+            {type:'Instrução ativa', priority:'MÁXIMA', color:'var(--accent-red)'},
+            {type:'Regra arquitetural', priority:'ALTA', color:'var(--accent-orange)'},
+            {type:'Código relevante', priority:'ALTA', color:'var(--accent-orange)'},
+            {type:'Código referenciado', priority:'MÉDIA', color:'var(--gold)'},
+            {type:'Histórico antigo', priority:'BAIXA', color:'var(--accent-blue)'},
+            {type:'Output irrelevante', priority:'NENHUMA', color:'var(--text-dim)'},
+          ].map((p,i) => (
+            <div key={i} style={{display:'flex', justifyContent:'space-between', padding:'10px 0', borderBottom:'1px solid rgba(255,255,255,0.05)'}}>
+              <span style={{fontSize:16}}>{p.type}</span>
+              <span style={{fontSize:13, fontWeight:700, color:p.color}}>{p.priority}</span>
+            </div>
+          ))}
+          <div className="card" style={{marginTop:20, borderLeftColor:'var(--gold)', borderLeftWidth:3}}>
+            <p style={{fontSize:16, fontStyle:'italic'}}>
+              "Se você não vai usar um token nos próximos 2 turnos, ele é <span className="red">desperdício</span>."
+            </p>
+          </div>
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 8: CICLO DE VIDA ===== */
+function Slide08() {
+  return (
+    <SlideFrame current={7}>
+      <span className="tag tag-green anim-1">Capítulo 3</span>
+      <h2 className="anim-2" style={{marginTop:16}}>Ciclo de Vida de uma <span className="green">Sessão</span></h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'flex', gap:16, marginTop:32, flex:1, alignItems:'flex-start'}}>
+        {[
+          {phase:'SETUP', tokens:'5-8K', desc:'System prompt + regras', color:'var(--accent-blue)', icon:'⚙️'},
+          {phase:'EXPLORAÇÃO', tokens:'+2-10K', desc:'Leituras, greps, globs', color:'var(--accent-purple)', icon:'🔍'},
+          {phase:'EXECUÇÃO', tokens:'+5-20K', desc:'Geração de código, tools', color:'var(--gold)', icon:'⚡'},
+          {phase:'VERIFICAÇÃO', tokens:'+2-5K', desc:'Build, testes, lint', color:'var(--accent-orange)', icon:'✅'},
+          {phase:'CLEANUP', tokens:'0', desc:'/clear — próxima sessão', color:'var(--accent-green)', icon:'🧹'},
+        ].map((p,i) => (
+          <div key={i} className="card" style={{flex:1, borderTopColor:p.color, borderTopWidth:3, textAlign:'center'}}>
+            <div style={{fontSize:32, marginBottom:12}}>{p.icon}</div>
+            <h3 style={{fontSize:16, color:p.color, letterSpacing:1, marginBottom:8}}>{p.phase}</h3>
+            <div className="big-number" style={{fontSize:36, color:p.color}}>{p.tokens}</div>
+            <p style={{fontSize:14, marginTop:8}}>{p.desc}</p>
+          </div>
+        ))}
+      </div>
+      <div className="anim-4" style={{marginTop:24}}>
+        <h3 style={{fontSize:22, marginBottom:16}}>Os 3 Maiores Vilões</h3>
+        <div className="grid-3">
+          {[
+            {villain:'Leitura sem objetivo', fix:'grep antes de read', icon:'📖'},
+            {villain:'Turnos desnecessários', fix:'Consolidar em 1-2 turnos', icon:'🔄'},
+            {villain:'Contexto morto', fix:'/clear entre tarefas', icon:'💀'},
+          ].map((v,i) => (
+            <div key={i} className="card" style={{display:'flex', gap:16, alignItems:'center'}}>
+              <span style={{fontSize:28}}>{v.icon}</span>
+              <div>
+                <div style={{fontSize:16, fontWeight:600, color:'var(--accent-red)'}}>{v.villain}</div>
+                <div style={{fontSize:14, color:'var(--accent-green)', marginTop:4}}>→ {v.fix}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 9: PROMPT ENGINEERING ===== */
+function Slide09() {
+  return (
+    <SlideFrame current={8}>
+      <span className="tag tag-purple anim-1">Parte II · Estratégias</span>
+      <h2 className="anim-2" style={{marginTop:16}}><span className="purple">Prompt Engineering</span> para Agentes</h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'flex', gap:40, marginTop:32, flex:1}}>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>5 Princípios</h3>
+          {[
+            {n:'1', title:'Especificidade', desc:'"Refatore Form.tsx para hook useValidation.ts"'},
+            {n:'2', title:'Contexto mínimo', desc:'grep "empresa_id" em services/ (não ler tudo)'},
+            {n:'3', title:'Boundaries', desc:'"NÃO crie UI — só backend logic"'},
+            {n:'4', title:'Format output', desc:'"Retorne APENAS linhas com error"'},
+            {n:'5', title:'Não-fazeres', desc:'"NÃO delete arquivos. NÃO mude interface pública."'},
+          ].map((p,i) => (
+            <div key={i} style={{display:'flex', gap:16, marginBottom:16, alignItems:'flex-start'}}>
+              <div className="icon-circle" style={{background:'rgba(167,139,250,0.15)', color:'var(--accent-purple)', width:40, height:40, fontSize:16, flexShrink:0}}>{p.n}</div>
+              <div>
+                <div style={{fontWeight:600, fontSize:16}}>{p.title}</div>
+                <div style={{fontSize:14, color:'var(--text-dim)', marginTop:2}}>{p.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>Templates por Tarefa</h3>
+          <div className="terminal" style={{fontSize:13, marginBottom:16}}>
+            <div><span className="comment">// Refatoração</span></div>
+            <div>"Refatore [ARQUIVO] para [OBJETIVO].</div>
+            <div> Mantenha: [O QUE NÃO MUDAR]."</div>
+          </div>
+          <div className="terminal" style={{fontSize:13, marginBottom:16}}>
+            <div><span className="comment">// Bug fix</span></div>
+            <div>"Bug: [ESPERADO] vs [ATUAL].</div>
+            <div> Arquivo: [PATH] linha [N]."</div>
+          </div>
+          <div className="terminal" style={{fontSize:13, marginBottom:16}}>
+            <div><span className="comment">// Nova feature</span></div>
+            <div>"Criar [FEATURE] em [PATH].</div>
+            <div> Padrão:参照 [ARQUIVO SIMILAR]."</div>
+          </div>
+          <div className="terminal" style={{fontSize:13}}>
+            <div><span className="comment">// Investigação</span></div>
+            <div>"Encontrar [O QUE] em [ONDE].</div>
+            <div> Retornar: [FORMATO]."</div>
+          </div>
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 10: SKILLS ===== */
+function Slide10() {
+  return (
+    <SlideFrame current={9}>
+      <span className="tag tag-green anim-1">Capítulo 5</span>
+      <h2 className="anim-2" style={{marginTop:16}}>Sistema de <span className="green">Skills</span></h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'flex', gap:40, marginTop:32, flex:1}}>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:16}}>O que é uma Skill</h3>
+          <p style={{marginBottom:24}}>
+            Um prompt <strong className="green">especializado e persistente</strong> que o agente carrega sob demanda — em vez de colocar 500 linhas no AGENTS.md.
+          </p>
+          <div className="card" style={{marginBottom:20}}>
+            <h3 style={{fontSize:16, marginBottom:12}}>Skills vs Inline</h3>
+            <div style={{display:'flex', gap:24}}>
+              <div style={{flex:1}}>
+                <div className="red" style={{fontSize:13, fontWeight:700}}>INLINE (AGENTS.md)</div>
+                <div style={{fontSize:14, marginTop:4}}>Tokens: <span className="red">ALTO</span> (sempre carregado)</div>
+                <div style={{fontSize:14}}>Consistência: <span className="red">Baixa</span></div>
+              </div>
+              <div style={{flex:1}}>
+                <div className="green" style={{fontSize:13, fontWeight:700}}>SKILLS</div>
+                <div style={{fontSize:14, marginTop:4}}>Tokens: <span className="green">BAIXO</span> (sob demanda)</div>
+                <div style={{fontSize:14}}>Consistência: <span className="green">Alta</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:16}}>Skills Universais Essenciais</h3>
+          {[
+            {name:'deploy', desc:'Pipeline completo', impact:'Alto', color:'var(--accent-blue)'},
+            {name:'cost-tracker', desc:'Rastreamento de custos', impact:'Alto', color:'var(--accent-green)'},
+            {name:'lean-context', desc:'Inspeção eficiente', impact:'Muito Alto', color:'var(--gold)'},
+            {name:'pre-flight-check', desc:'Verificação pré-mudança', impact:'Alto', color:'var(--accent-purple)'},
+            {name:'caveman', desc:'Output ultra-condensado', impact:'Muito Alto', color:'var(--accent-orange)'},
+            {name:'module-scaffold', desc:'Geração de boilerplate', impact:'Médio', color:'var(--accent-red)'},
+          ].map((s,i) => (
+            <div key={i} className="card" style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8, padding:'12px 20px'}}>
+              <div>
+                <code style={{fontSize:14}}>{s.name}</code>
+                <span style={{fontSize:14, marginLeft:12, color:'var(--text-dim)'}}>{s.desc}</span>
+              </div>
+              <span style={{fontSize:12, fontWeight:700, color:s.color}}>{s.impact}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 11: CACHE E REUTILIZAÇÃO ===== */
+function Slide11() {
+  return (
+    <SlideFrame current={10}>
+      <span className="tag tag-gold anim-1">Capítulo 6</span>
+      <h2 className="anim-2" style={{marginTop:16}}>Cache e <span className="gold">Reutilização</span></h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'flex', gap:40, marginTop:32, flex:1}}>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>3 Níveis de Cache</h3>
+          {[
+            {level:'Nível 1', name:'Conhecimento', desc:'Não ler o que já sei (regras no AGENTS.md)', color:'var(--accent-blue)'},
+            {level:'Nível 2', name:'Código', desc:'Não reescrever o que existe (templates/skills)', color:'var(--accent-green)'},
+            {level:'Nível 3', name:'Sessão', desc:'Não manter contexto morto (/clear)', color:'var(--gold)'},
+          ].map((c,i) => (
+            <div key={i} className="card" style={{marginBottom:16, borderLeftColor:c.color, borderLeftWidth:3}}>
+              <div style={{fontSize:13, color:c.color, fontWeight:700}}>{c.level} · {c.name}</div>
+              <p style={{fontSize:15, marginTop:6}}>{c.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:16}}>Padrões Práticos</h3>
+          <div className="comparison">
+            <div className="card bad" style={{marginRight:16}}>
+              <div className="label bad">❌ Ineficiente</div>
+              <div className="terminal" style={{fontSize:12}}>
+                <div className="error">read "service.ts" (inteiro)</div>
+                <div className="error">read "outro.ts" (inteiro)</div>
+                <div className="error">edit "service.ts"</div>
+                <div style={{marginTop:8}}>500+300 = <span className="error">800 tokens</span></div>
+              </div>
+            </div>
+            <div className="card good">
+              <div className="label good">✅ Eficiente</div>
+              <div className="terminal" style={{fontSize:12}}>
+                <div className="highlight">grep "funcao" src/</div>
+                <div className="highlight">read "service.ts:42-60"</div>
+                <div className="highlight">edit "service.ts#L45-55"</div>
+                <div style={{marginTop:8}}>20+15 = <span className="highlight">35 tokens</span></div>
+              </div>
+            </div>
+          </div>
+          <div className="card" style={{marginTop:20, textAlign:'center', animation:'glow 3s infinite'}}>
+            <span className="big-number gold" style={{fontSize:48}}>-96%</span>
+            <p style={{fontSize:16, marginTop:8}}>de tokens economizados com grep → read alvo</p>
+          </div>
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 12: SUBAGENTS ===== */
+function Slide12() {
+  return (
+    <SlideFrame current={11}>
+      <span className="tag tag-blue anim-1">Parte III · Padrões</span>
+      <h2 className="anim-2" style={{marginTop:16}}><span className="blue">Subagents</span> e Delegação</h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'flex', gap:40, marginTop:32, flex:1}}>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>Quando Delegar</h3>
+          {[
+            {scenario:'5 tarefas paralelas', use:'✅ SIM', reason:'Paralelismo real'},
+            {scenario:'1 tarefa sequencial', use:'❌ NÃO', reason:'Overhead > benefício'},
+            {scenario:'Leitura de muitos arquivos', use:'✅ SIM', reason:'Contexto isolado'},
+            {scenario:'Design de arquitetura', use:'❌ NÃO', reason:'Sem contexto da conversa'},
+            {scenario:'Code review de diff grande', use:'✅ SIM', reason:'Isola análise'},
+            {scenario:'Edição cirúrgica 1 arquivo', use:'❌ NÃO', reason:'Mais eficiente inline'},
+          ].map((s,i) => (
+            <div key={i} style={{display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid rgba(255,255,255,0.05)', fontSize:15}}>
+              <span>{s.scenario}</span>
+              <span style={{fontWeight:600}}>{s.use}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>O Padrão de Delegação</h3>
+          <div className="card" style={{marginBottom:16}}>
+            <div className="terminal" style={{fontSize:13}}>
+              <div><span className="comment">// ❌ RUIM: subagent sem objetivo claro</span></div>
+              <div className="error">"Analise o projeto"</div>
+              <br/>
+              <div><span className="comment">// ✅ BOM: tarefa autocontida e verificável</span></div>
+              <div className="highlight">"Liste todos os services que usam</div>
+              <div className="highlight">  'empresa_id' em src/features/*/</div>
+              <div className="highlight">  Retorne: arquivo:qtd_usos"</div>
+            </div>
+          </div>
+          <div className="card" style={{marginBottom:16}}>
+            <h3 style={{fontSize:16, marginBottom:8}}>Custo Real por Subagent</h3>
+            <div style={{display:'flex', gap:16}}>
+              <div style={{textAlign:'center'}}>
+                <div className="big-number" style={{fontSize:28, color:'var(--accent-blue)'}}>3-5K</div>
+                <div style={{fontSize:12}}>System prompt</div>
+              </div>
+              <div style={{textAlign:'center'}}>
+                <div className="big-number" style={{fontSize:28, color:'var(--gold)'}}>0.5-2K</div>
+                <div style={{fontSize:12}}>Tarefa</div>
+              </div>
+              <div style={{textAlign:'center'}}>
+                <div className="big-number" style={{fontSize:28, color:'var(--accent-green)'}}>0.2-1K</div>
+                <div style={{fontSize:12}}>Output</div>
+              </div>
+            </div>
+          </div>
+          <div className="card" style={{borderLeftColor:'var(--gold)', borderLeftWidth:3}}>
+            <p style={{fontSize:15}}>
+              <strong className="gold">Região ótima:</strong> 3-5 subagents paralelos para tarefas independentes.
+            </p>
+          </div>
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 13: MCP E FERRAMENTAS ===== */
+function Slide13() {
+  return (
+    <SlideFrame current={12}>
+      <span className="tag tag-purple anim-1">Capítulo 8</span>
+      <h2 className="anim-2" style={{marginTop:16}}><span className="purple">MCP</span> e o Custo Oculto das Tools</h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'flex', gap:40, marginTop:32, flex:1}}>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>O que é MCP</h3>
+          <p style={{marginBottom:24}}>
+            Model Context Protocol — permite à IDE conectar tools externas: bancos de dados, APIs, filesystem.
+          </p>
+          <div className="card" style={{marginBottom:16}}>
+            <h3 style={{fontSize:16, marginBottom:12}}>Custo por Tool Call</h3>
+            <div className="terminal" style={{fontSize:12}}>
+              <div><span className="comment">// Input: descrição da tool</span></div>
+              <div className="highlight">~200 tokens</div>
+              <br/>
+              <div><span className="comment">// Output: resultado</span></div>
+              <div className="error">500 - 5.000 tokens</div>
+              <br/>
+              <div><span className="comment">// ⚠️ Cada chamada é uma entrada no histórico</span></div>
+            </div>
+          </div>
+        </div>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>Padrões de Otimização</h3>
+          {[
+            {pattern:'SELECT com limite', bad:'SELECT * FROM produtos', good:'SELECT id, nome FROM produtos LIMIT 50'},
+            {pattern:'Filtrar output', bad:'"retorne tudo"', good:'"retorne APENAS nomes com estoque < 10"'},
+            {pattern:'Cache de schema', bad:'describe_table toda sessão', good:'grep no migration (mais barato)'},
+            {pattern:'Tools vs inline', bad:'5 tool calls sequenciais', good:'1 script inline (múltiplas passes)'},
+          ].map((p,i) => (
+            <div key={i} className="card" style={{marginBottom:12, padding:'16px 20px'}}>
+              <div style={{fontSize:14, fontWeight:700, color:'var(--gold)', marginBottom:8}}>{p.pattern}</div>
+              <div style={{display:'flex', gap:12}}>
+                <span style={{fontSize:12, color:'var(--accent-red)'}}>❌ {p.bad}</span>
+                <span style={{fontSize:12, color:'var(--accent-green)'}}>✅ {p.good}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 14: GERENCIAMENTO DE ESTADO ===== */
+function Slide14() {
+  return (
+    <SlideFrame current={13}>
+      <span className="tag tag-orange anim-1">Capítulo 9</span>
+      <h2 className="anim-2" style={{marginTop:16}}>Gerenciamento de <span className="orange">Estado</span></h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'flex', gap:40, marginTop:32, flex:1}}>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>4 Estratégias</h3>
+          {[
+            {name:'/clear periódico', desc:'Limpar após cada tarefa completa', icon:'🧹'},
+            {name:'Sessão por tarefa', desc:'Uma sessão = uma tarefa', icon:'📋'},
+            {name:'Scratchpad persistente', desc:'Resumir contexto em arquivo', icon:'📝'},
+            {name:'Context windows otimizados', desc:'Configurar por ferramenta', icon:'⚙️'},
+          ].map((s,i) => (
+            <div key={i} className="card" style={{display:'flex', gap:16, alignItems:'center', marginBottom:12}}>
+              <span style={{fontSize:28}}>{s.icon}</span>
+              <div>
+                <div style={{fontWeight:600}}>{s.name}</div>
+                <div style={{fontSize:14, color:'var(--text-dim)'}}>{s.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>Sinais de que Precisa Limpar</h3>
+          <div className="card" style={{marginBottom:16}}>
+            {[
+              'O agente repete código já gerado',
+              'Ignora regras definidas no início',
+              'Gera soluções para problemas já resolvidos',
+              'Leva mais tokens que o normal',
+              'Respostas ficam vagas ou genéricas',
+            ].map((s,i) => (
+              <div key={i} style={{display:'flex', gap:12, padding:'8px 0', borderBottom:'1px solid rgba(255,255,255,0.05)', fontSize:15}}>
+                <span className="red">⚠️</span> {s}
+              </div>
+            ))}
+          </div>
+          <div className="card" style={{textAlign:'center', background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.3)'}}>
+            <span className="big-number red" style={{fontSize:40}}>/clear</span>
+            <p style={{fontSize:16, marginTop:8}}>Ação imediata quando qualquer sinal aparecer</p>
+          </div>
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 15: ÁRVORE DE DECISÃO ===== */
+function Slide15() {
+  return (
+    <SlideFrame current={14}>
+      <span className="tag tag-gold anim-1">Parte IV · Frameworks</span>
+      <h2 className="anim-2" style={{marginTop:16}}>Árvore de <span className="gold">Decisão</span> Universal</h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{flex:1, display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'center'}}>
+        <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:0}}>
+          {[
+            {q:'Existe skill para isso?', yes:'Ler skill primeiro', no:'↓'},
+            {q:'É tarefa paralela?', yes:'Delegar a subagent(s)', no:'↓'},
+            {q:'Já tenho contexto?', yes:'Executar inline', no:'↓'},
+            {q:'Preciso ler código?', yes:'grep → read alvo → edit', no:'↓'},
+            {q:'Executar e verificar', yes:'', no:''},
+          ].map((d,i) => (
+            <React.Fragment key={i}>
+              <div className="card" style={{width:500, textAlign:'center', padding:'16px 24px', background: i===4 ? 'rgba(201,166,85,0.1)' : 'var(--bg-card)', border: i===4 ? '1px solid var(--gold)' : '1px solid rgba(201,166,85,0.15)'}}>
+                <div style={{fontSize:18, fontWeight:600}}>{d.q}</div>
+                {d.yes && <div style={{fontSize:14, color:'var(--accent-green)', marginTop:4}}>→ {d.yes}</div>}
+              </div>
+              {i < 4 && (
+                <div style={{display:'flex', alignItems:'center', gap:16}}>
+                  <div style={{width:2, height:24, background:'var(--gold-dim)'}} />
+                  <span style={{color:'var(--gold-dim)', fontSize:12}}>NÃO</span>
+                  <div style={{width:2, height:24, background:'var(--gold-dim)'}} />
+                </div>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 16: MÉTRICAS ===== */
+function Slide16() {
+  return (
+    <SlideFrame current={15}>
+      <span className="tag tag-blue anim-1">Capítulo 11</span>
+      <h2 className="anim-2" style={{marginTop:16}}><span className="blue">Métricas</span> e Rastreamento</h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'flex', gap:40, marginTop:32, flex:1}}>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>O que Medir</h3>
+          {[
+            {metric:'Tokens por tarefa', reveals:'Eficiência da abordagem'},
+            {metric:'Custo por sessão', reveals:'Impacto financeiro'},
+            {metric:'Turnos por tarefa', reveals:'Complexidade da comunicação'},
+            {metric:'Tool calls por tarefa', reveals:'Exploração vs execução'},
+            {metric:'Taxa de /clear', reveals:'Qualidade do contexto'},
+          ].map((m,i) => (
+            <div key={i} className="card" style={{marginBottom:12, padding:'12px 20px'}}>
+              <div style={{display:'flex', justifyContent:'space-between'}}>
+                <span style={{fontWeight:600}}>{m.metric}</span>
+                <span style={{fontSize:14, color:'var(--text-dim)'}}>{m.reveals}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>Benchmark por Tipo</h3>
+          {[
+            {type:'Bug fix simples', tokens:'5-15K', turns:'1-3', color:'var(--accent-green)'},
+            {type:'Refatoração', tokens:'15-40K', turns:'3-8', color:'var(--accent-blue)'},
+            {type:'Nova feature CRUD', tokens:'30-80K', turns:'5-15', color:'var(--accent-purple)'},
+            {type:'Módulo completo', tokens:'80-200K', turns:'15-30', color:'var(--gold)'},
+            {type:'Deploy', tokens:'20-50K', turns:'5-10', color:'var(--accent-orange)'},
+          ].map((b,i) => (
+            <div key={i} className="card" style={{marginBottom:12, padding:'12px 20px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+              <span style={{fontWeight:600, flex:1}}>{b.type}</span>
+              <span className="gold" style={{fontFamily:'JetBrains Mono', fontSize:16, flex:1, textAlign:'center'}}>{b.tokens}</span>
+              <span style={{fontSize:14, color:'var(--text-dim)', flex:1, textAlign:'right'}}>{b.turns} turnos</span>
+            </div>
+          ))}
+          <div className="card" style={{marginTop:16, textAlign:'center'}}>
+            <p style={{fontSize:16}}>
+              Se gasta <span className="red">2×</span> esses valores → algo está errado
+            </p>
+          </div>
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 17: CHECKLIST UNIVERSAL ===== */
+function Slide17() {
+  return (
+    <SlideFrame current={16}>
+      <span className="tag tag-green anim-1">Capítulo 12</span>
+      <h2 className="anim-2" style={{marginTop:16}}>Checklist <span className="green">Universal</span></h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'flex', gap:40, marginTop:32, flex:1}}>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:16}}>Setup Inicial</h3>
+          {[
+            'AGENTS.md mínimo (<100 linhas)',
+            'Skills para procedimentos recorrentes',
+            '.gitignore para session-cost.jsonl',
+            'Scratchpad persistente',
+          ].map((c,i) => (
+            <div key={i} className="card" style={{marginBottom:10, padding:'12px 16px', display:'flex', gap:12, alignItems:'center'}}>
+              <span style={{color:'var(--accent-green)', fontSize:18}}>☐</span>
+              <span style={{fontSize:15}}>{c}</span>
+            </div>
+          ))}
+          <h3 style={{fontSize:22, marginBottom:16, marginTop:24}}>Por Sessão</h3>
+          <div className="grid-2">
+            {[
+              {label:'INÍCIO', items:['Sessão anterior limpa?','AGENTS.md enxuto?','Skills disponíveis?']},
+              {label:'DURANTE', items:['grep antes de read','Edits consolidados','Subagents para paralelismo']},
+              {label:'FIM', items:['Build/test passou?','/clear se continua','Custo registrado']},
+            ].map((g,i) => (
+              <div key={i} className="card" style={{padding:'12px 16px'}}>
+                <div style={{fontSize:12, fontWeight:700, color:'var(--gold)', letterSpacing:1, marginBottom:8}}>{g.label}</div>
+                {g.items.map((item,j) => (
+                  <div key={j} style={{fontSize:13, marginBottom:4}}>☐ {item}</div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:16}}>Anti-padrões Universais</h3>
+          {[
+            {anti:'AGENTS.md > 200 linhas', cost:'~50K+ tokens/sessão', fix:'Comprimir <100 linhas'},
+            {anti:'Ler arquivo inteiro', cost:'500-2000 extras', fix:'grep → read com range'},
+            {anti:'5 turnos sequenciais', cost:'5× overhead', fix:'Consolidar 1-2 turnos'},
+            {anti:'Não usar /clear', cost:'Cresce indefinido', fix:'/clear entre tarefas'},
+            {anti:'Output longo sem pedido', cost:'Output tokens caros', fix:'Telegráfico (caveman)'},
+            {anti:'Subagent para tarefa simples', cost:'5K+ overhead', fix:'Fazer inline'},
+            {anti:'Não usar skills', cost:'Reinventar toda vez', fix:'Criar e usar skill'},
+            {anti:'Delegar design', cost:'Sem contexto', fix:'Principal planeja'},
+          ].map((a,i) => (
+            <div key={i} style={{display:'flex', gap:12, padding:'8px 0', borderBottom:'1px solid rgba(255,255,255,0.05)', fontSize:14}}>
+              <span className="red" style={{flex:2}}>{a.anti}</span>
+              <span style={{flex:1, color:'var(--text-dim)'}}>{a.cost}</span>
+              <span className="green" style={{flex:1.5}}>{a.fix}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 18: RULES E COMMANDS ===== */
+function Slide18() {
+  return (
+    <SlideFrame current={17}>
+      <span className="tag tag-purple anim-1">Parte V</span>
+      <h2 className="anim-2" style={{marginTop:16}}><span className="purple">Rules</span> e <span className="gold">Commands</span></h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'flex', gap:40, marginTop:32, flex:1}}>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>Hierarquia de Rules</h3>
+          {[
+            {level:'Global', scope:'~/.config/', example:'CLAUDE.md global', color:'var(--accent-blue)'},
+            {level:'Projeto', scope:'raiz do repo', example:'AGENTS.md, .cursorrules', color:'var(--accent-purple)'},
+            {level:'Pasta', scope:'subdiretório', example:'src/features/catalogo/AGENTS.md', color:'var(--gold)'},
+            {level:'Sessão', scope:'temporário', example:'instrução no chat', color:'var(--accent-green)'},
+          ].map((r,i) => (
+            <div key={i} className="card" style={{marginBottom:12, padding:'16px 20px', display:'flex', gap:16, alignItems:'center'}}>
+              <div className="icon-circle" style={{background:`${r.color}20`, color:r.color, width:44, height:44, fontSize:14, fontWeight:700}}>
+                {i+1}
+              </div>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:600}}>{r.level}</div>
+                <div style={{fontSize:13, color:'var(--text-dim)'}}>{r.scope}</div>
+              </div>
+              <code style={{fontSize:12}}>{r.example}</code>
+            </div>
+          ))}
+        </div>
+        <div style={{flex:1}}>
+          <h3 style={{fontSize:22, marginBottom:20}}>Rules vs Skills</h3>
+          <div className="card" style={{marginBottom:16}}>
+            <div style={{display:'grid', gridTemplateColumns:'2fr 1fr 1fr', gap:8, fontSize:13, fontWeight:700, color:'var(--gold)', padding:'0 0 8px', borderBottom:'1px solid rgba(201,166,85,0.2)'}}>
+              <div>Conteúdo</div>
+              <div>Onde</div>
+              <div>Por quê</div>
+            </div>
+            {[
+              {content:'Regra de 1 linha', where:'Rule', why:'Sempre ativa'},
+              {content:'Regra arquitetural', where:'Rule', why:'Importante sempre'},
+              {content:'Procedimento 10+ passos', where:'Skill', why:'Sob demanda'},
+              {content:'Template de código', where:'Skill', why:'Não precisa sempre'},
+              {content:'Comportamento output', where:'Rule', why:'Afeta respostas'},
+              {content:'Pipeline deploy', where:'Skill', why:'Usado raramente'},
+            ].map((r,i) => (
+              <div key={i} style={{display:'grid', gridTemplateColumns:'2fr 1fr 1fr', gap:8, fontSize:13, padding:'6px 0', borderBottom:'1px solid rgba(255,255,255,0.03)'}}>
+                <div>{r.content}</div>
+                <div><span className={r.where==='Rule'?'blue':'green'}>{r.where}</span></div>
+                <div style={{color:'var(--text-dim)'}}>{r.why}</div>
+              </div>
+            ))}
+          </div>
+          <div className="card" style={{borderLeftColor:'var(--gold)', borderLeftWidth:3}}>
+            <p style={{fontSize:15}}>
+              Cada rule é <strong className="red">reenviada em TODA chamada</strong>.<br/>
+              AGENTS.md de 10K tokens × 20 turnos = <strong className="gold">200K tokens</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 19: CONFIGURAÇÕES SECRETAS ===== */
+function Slide19() {
+  return (
+    <SlideFrame current={18}>
+      <span className="tag tag-red anim-1">Parte VI · Avançado</span>
+      <h2 className="anim-2" style={{marginTop:16}}>Configurações <span className="gold">Secretas</span> por IDE</h2>
+      <div className="divider anim-2" />
+      <div className="anim-3" style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:20, marginTop:24, flex:1, alignContent:'start'}}>
+        {[
+          {ide:'Claude Code', tips:['CLAUDE.md na raiz','~/.claude/settings.json','/compact para comprimir','/clear entre tarefas'], color:'var(--accent-purple)'},
+          {ide:'Cursor', tips:['.cursorrules na raiz','.cursor/settings.json','.cursorindexing','Model preferences'], color:'var(--accent-blue)'},
+          {ide:'OpenCode', tips:['opencode.json','~/.config/opencode/','context files otimizados','Skills em .agents/'], color:'var(--accent-green)'},
+          {ide:'Cline', tips:['.clinerules na raiz','.cline/settings','Auto-approve modes','Custom tools'], color:'var(--accent-orange)'},
+          {ide:'Aider', tips:['.aider.conf.yml','CONVENTIONS.md','--auto-commits','--clean-diffs'], color:'var(--gold)'},
+          {ide:'Windsurf', tips:['.windsurfrules','Flow awareness','Cascade context','Memories system'], color:'var(--accent-red)'},
+        ].map((ide,i) => (
+          <div key={i} className="card" style={{borderTopColor:ide.color, borderTopWidth:3}}>
+            <h3 style={{fontSize:18, color:ide.color, marginBottom:12}}>{ide.ide}</h3>
+            {ide.tips.map((tip,j) => (
+              <div key={j} style={{fontSize:14, padding:'4px 0', borderBottom:'1px solid rgba(255,255,255,0.03)'}}>
+                <code style={{fontSize:12}}>{tip}</code>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="anim-4 card" style={{marginTop:20, display:'flex', alignItems:'center', gap:16}}>
+        <span style={{fontSize:24}}>💡</span>
+        <p style={{fontSize:16}}>
+          <strong className="gold">Dica:</strong> independentemente da IDE, o padrão é sempre: <code>grep antes de read</code> → <code>assinar antes de corpo</code> → <code>consolidar edits</code> → <code>/clear entre tarefas</code>
+        </p>
+      </div>
+    </SlideFrame>
+  );
+}
+
+/* ===== SLIDE 20: TAKEAWAYS ===== */
+function Slide20() {
+  return (
+    <SlideFrame current={19}>
+      <div className="cover-bg" />
+      <div style={{flex:1, display:'flex', flexDirection:'column', justifyContent:'center', position:'relative', zIndex:1}}>
+        <span className="tag tag-gold anim-1">Resumo Final</span>
+        <h2 className="anim-2" style={{marginTop:16, fontSize:52}}>
+          7 Regras de <span className="gold">Ouro</span>
+        </h2>
+        <div className="divider anim-2" />
+        <div className="anim-3" style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:20, marginTop:32}}>
+          {[
+            {n:'1', rule:'AGENTS.md < 100 linhas', why:'50K+ tokens/seção evitados'},
+            {n:'2', rule:'grep antes de read', why:'-96% tokens de leitura'},
+            {n:'3', rule:'Skills sob demanda', why:'Consistência + economia'},
+            {n:'4', rule:'/clear entre tarefas', why:'Contexto limpo = respostas melhores'},
+            {n:'5', rule:'Subagents para paralelismo', why:'Isolamento de contexto'},
+            {n:'6', rule:'Output telegráfico', why:'-50-70% output tokens'},
+            {n:'7', rule:'Medir custo sempre', why:'Visibilidade = controle'},
+          ].map((r,i) => (
+            <div key={i} className="card" style={{display:'flex', gap:16, alignItems:'center', padding:'16px 20px'}}>
+              <div className="icon-circle" style={{background:'rgba(201,166,85,0.15)', color:'var(--gold)', fontSize:20, fontWeight:900}}>{r.n}</div>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:600, fontSize:16}}>{r.rule}</div>
+                <div style={{fontSize:13, color:'var(--text-dim)', marginTop:2}}>{r.why}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="anim-4" style={{marginTop:32, textAlign:'center'}}>
+          <p style={{fontSize:20, color:'var(--text-dim)'}}>
+            "Cada token no system prompt custa <span className="gold">N×</span> ao longo da sessão."
+          </p>
+          <p style={{fontSize:14, marginTop:16, color:'var(--gold-dim)'}}>
+            Economia de Tokens em IDEs Agênticas · v1.0 · Julho 2026
+          </p>
+        </div>
+      </div>
+    </SlideFrame>
+  );
+}
+
+const slides = [Slide01,Slide02,Slide03,Slide04,Slide05,Slide06,Slide07,Slide08,Slide09,Slide10,Slide11,Slide12,Slide13,Slide14,Slide15,Slide16,Slide17,Slide18,Slide19,Slide20];
+
+function App() {
+  const [current, setCurrent] = useState(0);
+
+  const go = useCallback((dir) => {
+    setCurrent(c => Math.max(0, Math.min(TOTAL_SLIDES-1, c + dir)));
+  }, []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); go(1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+      if (e.key === 'Home') { e.preventDefault(); setCurrent(0); }
+      if (e.key === 'End') { e.preventDefault(); setCurrent(TOTAL_SLIDES-1); }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [go]);
+
+  // Touch/swipe support
+  const touchStart = React.useRef(null);
+  const handleTouchStart = (e) => { touchStart.current = e.touches[0].clientX; };
+  const handleTouchEnd = (e) => {
+    if (!touchStart.current) return;
+    const diff = touchStart.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) go(diff > 0 ? 1 : -1);
+    touchStart.current = null;
+  };
+
+  const SlideComponent = slides[current];
+  return <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} style={{width:'100vw',height:'100vh'}}><SlideComponent /></div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

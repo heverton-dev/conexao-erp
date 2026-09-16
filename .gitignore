@@ -1,0 +1,80 @@
+node_modules/
+dist/
+.env
+.env.local
+*.tsbuildinfo
+credentials.env
+vps.env
+
+# Skills com repo Git próprio (clonados)
+.agents/skills/caveman/
+.agents/skills/headroom/
+.agents/skills/lean-ctx/
+.agents/skills/rtk/
+
+# Session cost tracking (gerado automaticamente)
+.agents/session-cost.jsonl
+.agents/.session-state.json
+.agents/.mm-session-state.json
+
+*storybook.log
+storybook-static
+
+# Scripts de desenvolvimento (não usar no deploy)
+scripts/db/
+scripts/fix/
+scripts/exports/
+scripts/deploy/
+
+# Pasta com credenciais e scripts sensíveis
+_secret/
+
+# Pastas de cache
+.tanstack/
+.mimocode/
+
+# Dependências
+node_modules/
+
+# Build
+dist/
+
+# Ambiente
+.env
+.env.local
+
+# Logs
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Scripts de teste temporários
+test-*.py
+
+# OpenCode local
+.opencode/
+
+# Arquivos de teste temporários
+test-*.py
+
+# Pasta docs — ignorada, EXCETO docs/agents/ (documentação de agentes,
+# referenciada pelo AGENTS.md e lida sob demanda)
+docs/*
+!docs/agents/
+
+# Pasta docs-projeto
+docs-projeto
+
+# Arquivos de credenciais
+.env
+.credencials.env
+.vps.env
+.vps.config.env
+.vps.deploy.env
+# Graphify output
+graphify-out/
+src/graphify-out/
+# Added by code-review-graph
+.code-review-graph/

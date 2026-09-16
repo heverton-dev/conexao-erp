@@ -1,0 +1,2 @@
+export { {{MODULO_KEY}}Definition } from './module'
+export { {{MODULO_KEY}}Permissions } from './permissions'

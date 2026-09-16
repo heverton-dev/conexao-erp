@@ -1,0 +1,32 @@
+name: adicionar-feature
+description: Adiciona feature completa a um módulo existente
+steps:
+  - name: validar-modulo
+    skill: validar-modulo
+    args:
+      modulo: $modulo
+
+  - name: criar-componente
+    skill: criar-componente-modulo
+    args:
+      modulo: $modulo
+      componente: $componente
+    depends_on: validar-modulo
+
+  - name: criar-rota
+    skill: criar-rota
+    args:
+      modulo: $modulo
+      rota: $rota
+    depends_on: criar-componente
+
+  - name: criar-service
+    skill: gerar-crud
+    args:
+      modulo: $modulo
+      tabela: $tabela
+    depends_on: criar-rota
+
+  - name: validar-build
+    bash: npm run build
+    depends_on: criar-service

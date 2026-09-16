@@ -1,0 +1,358 @@
+# AGENTS.md — ERP Odonto & Bubble Reverse Engineering
+
+**Idioma:** PT-BR obrigatório.
+
+## Estrutura do Projeto
+
+- **Raiz** → `bubble_reverse_engineering/`: Engenharia reversa de Bubble.io + configs globais.
+- **`proj_erp/`** → Aplicação ERP (TanStack Start + React Router + Vite + Supabase).
+- **`supabase-mcp-server/`** → MCP server TypeScript para gerenciar banco Supabase.
+
+## Comandos de Desenvolvimento
+
+```bash
+npm run dev      # dev server (Vite)
+npm run build    # build produção
+npm run format   # Prettier
+npm run lint     # ESLint
+```
+
+## 🚨 Regras Obrigatórias (resumo)
+
+| Regra | Detalhe |
+|-------|---------|
+| Sem alertas nativos | `window.confirm/alert/prompt` PROIBIDO. Usar `AlertDialog` ou `Dialog` |
+| Multi-tenant | Toda tabela tem `empresa_id`. RLS filtra por empresa |
+| RequirePermission | Toda rota autenticada usa `RequirePermission` ou `RequireSuperAdmin` |
+| Eventos Central de Ações | Todo módulo tem ≥2 eventos + `dispararEventoModulo()` fire-and-forget |
+| Build check | `npm run build` SEMPRE após alteração de código |
+
+## Referências Detalhadas
+
+| Documento | Quando ler |
+|-----------|------------|
+| `skill://docs/ui-rules` | Criando/editando modais, AlertDialog, Dialog, scroll |
+| `skill://docs/architecture` | Novo módulo, eventos, multi-tenant, estrutura |
+| `skill://docs/permissions` | Permissões, guards, checklist novo módulo |
+| `skill://docs/mcp-supabase` | Usando MCP Supabase (tools SQL) |
+| `skill://rules/economia-tokens` | Regras de eficiência de tokens |
+
+## Comportamento do Agente
+
+- **Caveman**: SEM greetings, SEM re-emitir arquivos inteiros, direto ao ponto. Explicações SOMENTE com "?"
+- **Lean-CTX**: Ler assinaturas antes de corpos, agrupar edições, evitar grep em diretórios grandes
+- **RTK**: Manter lições aprendidas no scratchpad abaixo. Consultar antes de cada plano
+- **Skills**: Checar `.agents/skills/` antes de tarefa complexa
+
+### 📝 SCRATCHPAD RTK
+
+- **Learnt**: Laboratório de Testes (global.laboratorio.tsx): requer migration 00054 para RPCs de token real. Fallback automático para UUID local se RPC indisponível. Página reescrita com 3 abas (Gerador, Teste de Fluxo, Histórico). Central de Testes (global.testes.tsx): fetch com AbortSignal.timeout(30000) adicionado.
+- **Regra Obrigatória**: SEMPRE rodar `npm run build` após QUALQUER alteração de código para validar ausência de erros. Nunca assumir que edição está correta sem verificar build.
+
+## Deploy
+
+- Só executar quando o usuário disser "deploy", "/deploy" ou "fazer deploy".
+- Usar skill `deploy-vps`. Build deve passar antes do push.
+
+## Bubble Reverse Engineering
+
+- Pipeline completo via `/bubble-tech-lead` + skills em `.agents/skills/`.
+
+## Skills Disponíveis
+
+| Skill | Descrição |
+|-------|-----------|
+| `criar-modulo` | Cria estrutura completa de novo módulo |
+| `criar-rota` | Cria rota protegida no ERP Odonto |
+| `gerar-crud` | Operações CRUD com React Query |
+| `criar-componente-modulo` | Cria componente React seguindo padrões shadcn/ui |
+| `adicionar-permissao` | Adiciona permissão ao sistema de permissões |
+| `validar-modulo` | Verificar integridade do módulo |
+| `documentar-modulo` | Gerar documentação do módulo |
+| `deploy-vps` | Deploy via Docker + VPS |
+| `planejar-modulo-repo-externo` | Analisar repo externo e planejar integração |
+| `gerenciar-nav-items` | Gerencia nav items de módulos |
+| `design-frontend` | Embeleza frontend com design system (`/design <rota>`) |
+| `responsividade` | Analisa e corrige responsividade (`/responsividade <modulo>`) |
+| `criar-design-modulo` | Cria config de Design System do módulo |
+| `gerar-pagina` | Gera página React completa com Design System |
+| `gerar-formulario` | Gera formulário React com React Hook Form + Zod |
+| `gerar-modal` | Gera Modal/Dialog com shadcn/ui |
+| `google-maps-platform` | Google Maps APIs e SDKs |
+| `loop` | Especifica loop de agente autônomo |
+| `rtk-memory` | Memória RTK para agentes |
+| `lean-ctx` | Estratégia LEAN-CTX para limitação de contexto |
+| `caveman` | Modo comunicação ultra-condensada |
+| `pre-flight-check` | Verificação prévia antes de implementações |
+| `implementar-mapa-dark-premium` | Mapa dark premium com tokens CSS |
+| `headroom` | Framework para componentes UI reutilizáveis |
+| `modulo-completo` | Workflow: Documentação → Design → Responsividade |
+| `loop-modulo-completo` | Pipeline iterativo de módulo até tudo passar |
+| `engsoft-moderna` | Passos operacionais do livro Eng. Software Moderna (processos, requisitos, SOLID, padrões, testes, refactoring, DevOps, Git) |
+| `ai-engineering` | Passos operacionais de AI Engineering (Chip Huyen) — prompts, RAG, fine-tuning, avaliação, deploy, guardrails |
+| `ai-agents-mcp-operacional` | Passos operacionais de AI Agents with MCP — criação de servidores/cliente, tools, resources, prompts, segurança |
+| `building-apps-ai-agents` | Passos de Building Applications with AI Agents (Albada) — design, ferramentas, memória, multi-agente, deploy |
+| `agentic-enterprise` | Passos de The Agentic Enterprise — estratégia, arquitetura, governança, segurança de agentes enterprise |
+| `ai-assisted-programming` | Passos de AI-Assisted Programming (pt-br) — engenharia de prompt, Copilot, ChatGPT, refactoring, debugging |
+| `ai-native-software-delivery` | Passos de AI-Native Software Delivery — CI/CD com IA, deploy automatizado, infra como código |
+| `ai-systems-performance-engineering` | Passos de AI Systems Performance Engineering — GPU, CUDA, PyTorch profiling, inferência, otimização |
+| `building-ai-agent-platforms` | Passos de Building AI Agent Platforms — design de plataforma, API, observabilidade, DevEx |
+| `building-micro-frontends` | Passos de Building Micro-Frontends (Mezzalira) — composição, roteamento, deploy, migração |
+| `ai-value-creators` | Passos de AI Value Creators (Thomas) — estratégia de valor IA, ROI, governança, capacitação |
+| `eu-ai-act-guide` | Passos do EU AI Act Guide — classificação risco, conformidade, documentação, auditoria |
+| `ai-essentials-executives` | Passos de AI Essentials for Tech Executives — viabilidade, seleção modelos, custos, riscos |
+| `building-software-vibe-coding` | Passos de Building Software with Vibe Coding — prompt engineering, iteração rápida, deploy |
+| `agentic-mesh` | Passos de Agentic Mesh — arquitetura mesh, comunicação entre agentes, segurança, governança |
+| `ai-engineering-art-intelligent-systems` | Passos de AI Engineering and Art of Building Intelligent Systems — design, data pipelines, LLMOps, multiagente |
+| `ai-assisted-programming-web-ml` | Passos de AI-Assisted Programming for Web and ML — setup, front/back-end, ML, deploy (494 passos) |
+| `ai-agents-definitive-guide` | Passos de AI Agents The Definitive Guide (Koenigstein) — tipos de agentes, ferramentas, memória, multiagente, deploy |
+| `agentic-ai-data-architectures` | Passos de Agentic AI Data Architectures — pipelines dados, feature store, RAG, governança |
+| `applied-ai-enterprise-java` | Passos de Applied AI for Enterprise Java Development — Jakarta, Quarkus, LangChain4j, deploy |
+| `building-ai-powered-products` | Passos de Building AI-Powered Products (Nika) — estratégia produto IA, design, avaliação, ética |
+| `building-genai-fastapi` | Passos de Building GenAI Services with FastAPI — APIs, streaming, RAG, deployment Cloud Run |
+| `building-genai-enterprise` | Passos de Building Generative AI for Enterprise — arquitetura, segurança, governança, LLMOps |
+| `genai-software-development` | Passos de Generative AI for Software Development — assistência codificação, debugging, documentação |
+| `genai-design-patterns` | Passos de Generative AI Design Patterns — RAG, fine-tuning, caching, guardrails, avaliação |
+| `designing-ai-interfaces` | Passos de Designing AI Interfaces (Macfadyen) — UX copiloto, dashboards IA, design patterns |
+| `essential-math-ai` | Passos de Essential Math for AI (Nelson) — álgebra linear, cálculo, probabilidade, otimização para ML |
+| `grokking-ai-algorithms` | Passos de Grokking AI Algorithms — busca, GA, regressão, redes neurais, RL, transformers |
+| `hands-on-apis-ai-data-science` | Passos de Hands-On APIs for AI & Data Science — FastAPI, Docker, Airflow, LangChain, deploy |
+| `python-simplified-genai` | Passos de Python Simplified with GenAI — Python+IA para análise dados, automação, visualização |
+| `vibe-coding-kim-yegge` | Passos de Vibe Coding (Kim, Yegge) — prompting iterativo, debugging, organização projeto |
+| `visualizing-genai` | Passos de Visualizing Generative AI — APIs LLM, agentes, arquitetura GenAI, demos |
+| `vibe-engineering` | Passos de Vibe Engineering (Lelek, Skowroński) — modernização LLM, context engineering, validação |
+| `automate-boring-stuff-python` | Passos de Automate the Boring Stuff with Python (Sweigart) — regex, scraping, Excel, PDF, email, GUI, OCR |
+| `principles-building-ai-agents` | Passos de Principles of Building AI Agents (Bhagwat) — modelos, prompts, tools, MCP, RAG, evals, deploy |
+| `learning-ai-tools-tableau` | Passos de Learning AI Tools in Tableau — preparação dados, modelos, previsão, storytelling |
+| `learning-genai-tools-excel` | Passos de Learning GenAI Tools for Excel — funções IA, análise, visualização, automação |
+| `machine-learning-classificacao` | Passos de Machine Learning: Introdução à Classificação (Casa do Código) — modelos, validação, métricas |
+| `vibe-coding-addy-osmani` | Passos de Vibe Coding (Osmani) — prompting, prototipação rápida, refatoração com IA |
+| `data-science-do-zero` | Passos de Data Science do Zero (Grus) — estatística, álgebra linear, ML, SQL, MapReduce |
+| `engenharia-software-ia-sandeco` | Passos de Engenharia de Software com IA (Sandeco) — Git+IA, design patterns, débito técnico, agentes |
+| `apis-rest` | Design de APIs RESTful, métodos HTTP, autenticação e boas práticas |
+| `arquitetura-distribuida` | Microsserviços, comunicação, tolerância a falhas e observabilidade |
+| `arquitetura-limpa` | Princípios SOLID, boundaries, design de componentes e casos de uso |
+| `arquitetura-tomada-decisao` | ADRs, trade-offs e documentação arquitetural |
+| `building-microservices-go` | Microserviços com Go, APIs REST e concorrência |
+| `building-multi-tenant-saas` | Design de multi-tenancy, isolamento e escalabilidade |
+| `clean-architecture-android` | Clean Architecture Android, MVVM e injeção de dependência |
+| `designing-data-intensive` | Replicação, particionamento, transações, streams e batch |
+| `explorando-apis-java` | JDBC, IO, Threads e JavaFX |
+| `facilitating-software-architecture` | Liderança arquitetural, stakeholders e governança |
+| `fundamentals-software-architecture` | Estilos arquiteturais, métricas e governança |
+| `fundamentos-arquitetura` | Estilos, métricas, componentes e governança |
+| `google-app-engine` | Serviços em nuvem, escalabilidade e Datastore |
+| `graphql` | Schema design, queries, mutations, resolvers e integração |
+| `head-first-software-architecture` | Princípios de arquitetura, design patterns e documentação |
+| `introducao-arquitetura-design` | UML, padrões de projeto e modelagem |
+| `learning-domain-driven-design` | Bounded contexts, eventos e agregados |
+| `mastering-apis-enterprise` | Design enterprise, governança e segurança |
+| `modern-data-architecture-ai` | Pipelines, feature stores e data lakes para IA |
+| `principles-modernization` | Migração e refactoring de sistemas legados |
+| `rest-construa-apis-inteligentes` | Design RESTful, HTTP e autenticação |
+| `restful-api-design` | RESTful API Design, HATEOAS e versionamento |
+| `software-architecture-decision` | ADRs, trade-offs e riscos |
+| `version-control-git` | Git, branching, merge, rebase e workflows |
+| `ai-native-software-delivery` | CI/CD com IA, deploy automatizado e infra como código |
+| `caixa-de-ferramentas-devops` | Ferramentas e práticas DevOps |
+| `containers-com-docker` | Docker do desenvolvimento à produção |
+| `docker` | Fundamentos de Docker |
+| `docker-deep-dive` | Docker Deep Dive — Nigel Poulton |
+| `docker-para-desenvolvedores` | Docker para desenvolvedores |
+| `docker-para-desenvolvedores-rafael-gomes` | Docker para desenvolvedores — Rafael Gomes |
+| `docker-up-and-running` | Docker do básico ao deploy |
+| `amazon-aws-descomplicando` | Amazon AWS descomplicando a nuvem |
+| `azure-cloud` | Azure — plataformas e serviços em cloud |
+| `certificacao-linux-lpic` | Guia prático para prova LPIC-1 |
+| `descomplicando-docker-v1` | Descomplicando Docker v1 |
+| `descomplicando-docker-v2` | Descomplicando Docker v2 |
+| `devops-na-pratica` | DevOps na prática |
+| `google-app-engine-devops` | Google App Engine — serviços na nuvem |
+| `jornada-kubernetes-completo` | Jornada Kubernetes — teoria à prática com GitOps |
+| `kubernetes-pt` | Kubernetes |
+| `genai-on-google-cloud` | GenAI no Google Cloud |
+| `generative-ai-on-kubernetes` | Generative AI em Kubernetes |
+| `hands-on-devops-linux` | DevOps com Linux na prática |
+| `implementing-devsecops` | DevSecOps com Docker e Kubernetes |
+| `infrastructure-automation-terraform` | Automação de infraestrutura com Terraform |
+| `jenkins-automatize-tudo` | Jenkins — automatize tudo sem complicações |
+| `kubernetes-up-and-running` | Kubernetes do básico à produção |
+| `manual-de-devops` | Manual de DevOps |
+| `mastering-docker` | Dominando Docker — 2ª Edição |
+| `modern-system-administration` | Administração moderna de sistemas |
+| `sre-with-aiops` | SRE com AIOps |
+| `strategic-devops` | DevOps Estratégico |
+| `comprehensive-devops-interview-guide` | Guia completo para entrevistas DevOps |
+| `ultimate-docker-container-book` | The Ultimate Docker Container Book |
+| `usando-docker` | Usando Docker |
+| `using-docker-2015` | Using Docker — guia prático |
+| `a-web-mobile-programe-para-um-mundo-de-muitos` | Desenvolvimento Web |
+| `aplicativos-web-real-time-com-node-js` | Node.js |
+| `boas-praticas-nodejs-umbler` | Node.js |
+| `building-production-ready-web-apps-with-nodejs` | Node.js, Web Apps |
+| `cangaceiro-javascript-uma-aventura-no-sertao-da` | JavaScript |
+| `construindo-apis-rest-com-nodejs` | Node.js, APIs REST |
+| `construindo-apis-testaveis-com-nodejs-waldemar-neto` | Node.js, APIs, Testes |
+| `creating-npm-package-your-react-javascript-guide-to` | JavaScript, React, NPM |
+| `data-structures-and-algorithms-in-javascript` | JavaScript, Algoritmos |
+| `django-de-a-a-z` | Django |
+| `dominando-javascript-com-jquery-casa-do-codigo` | jQuery |
+| `ecmascript-6-entre-de-cabeca-no-futuro-do-javascript` | JavaScript, ECMAScript 6 |
+| `efficient-nodejs` | Node.js |
+| `elixir-do-zero-a-concorrencia` | Elixir |
+| `eloquent-javascript` | JavaScript |
+| `epub-angular-11-e-firebase-construindo-uma-aplicacao` | Angular |
+| `epub-desenvolva-jogos-com-html5-canvas-e-javascript` | Canvas, JavaScript |
+| `epub-desenvolvimento-web-com-aspnet-mvc` | ASP.NET |
+| `epub-desenvolvimento-web-com-php-e-mysql` | PHP, MySQL |
+| `epub-guia-front-end-o-caminho-das-pedras-para-ser-um` | Front-End |
+| `epub-html5-e-css3-domine-a-web-do-futuro` | HTML/CSS |
+| `epub-javascript-assertivo-testes-e-qualidade-de` | JavaScript, Testes |
+| `epub-play-framework-java-para-web-sem-servlets-e-com` | Java, Play Framework |
+| `epub-react-native-desenvolvimento-de-aplicativos` | React Native |
+| `estruturas-de-dados-e-algoritmos-com-javascript` | JavaScript, Algoritmos |
+| `flask-de-a-a-z` | Python/Flask |
+| `full-stack-react-typescript-and-node` | React, TypeScript, Node.js |
+| `full-stack-web-development` | Full-Stack |
+| `full-stack-web-development-with-react-angular-nodejs` | React, Angular, Node.js |
+| `full-stack-web-development-with-typescript-5` | TypeScript |
+| `head-first-javascript-programming-a-learners-guide-to` | JavaScript |
+| `html-5-embarque-imediato` | HTML/CSS |
+| `html-e-css-projete-e-construa-sites` | HTML/CSS |
+| `ios-programe-para-iphone-e-ipad` | iOS |
+| `javascript-and-jquery-interactive-front` | jQuery |
+| `javascript-for-modern-web-development-alok-ranjan` | JavaScript |
+| `javascript-mastery-advanced-techniques-for-dynamic` | JavaScript |
+| `mastering-mean-stack` | MEAN Stack |
+| `meteor-criando-aplicacoes-web-real-time-com-javascript` | Meteor |
+| `modern-web-design-in-30-days` | Design Web |
+| `nodejs-aplicacoes-web-real-time-com-nodejs` | Node.js |
+| `nodejs-complete-resume` | Node.js |
+| `nodejs-handbook` | Node.js |
+| `nodejs-para-iniciantes-umbler` | Node.js |
+| `o-retorno-do-cangaceiro-javascript-de-padroes-a-uma` | JavaScript |
+| `swift-programe-para-iphone-e-ipad` | iOS/Swift |
+| `react-js-a-beginners-guide-to-building-interactive` | React |
+| `udemy-guide-nodejs-andrewmead-version3` | Node.js |
+| `web-api-cookbook-level-up-your-javascript` | JavaScript, APIs |
+| `web-apis-em-nodejs-luiz-tools` | Node.js, APIs |
+| `web-design-responsivo-paginas-adaptaveis-para-todos` | Design Responsivo |
+| `web-development-with-html-css-and-javascript` | HTML/CSS, JavaScript |
+| `webapp-com-nodejs-e-mongodb-umbler` | Node.js, MongoDB |
+| `epub-aplicacoes-java-para-a-web-com-jsf-e-jpa` | Java Web |
+| `epub-aprenda-javascript-com-dashboards-seus-primeiros` | JavaScript |
+| `epub-aspnet-mvc5-crie-aplicacoes-web-na-plataforma` | ASP.NET |
+| `epub-canivete-suico-do-desenvolvedor-node` | Node.js |
+| `epub-canvas-html-5-composicao-grafica-e` | Canvas, HTML5 |
+| `epub-coletanea-front-end` | Front-End |
+| `epub-css-eficiente-tecnicas-e-ferramentas-que-fazem-a` | CSS |
+| `epub-estruturas-de-dados-domine-as-praticas` | Algoritmos |
+| `epub-front-end-com-vuejs-da-teoria-a-pratica-sem` | Vue.js |
+| `epub-guia-pratico-de-typescript-melhore-suas` | TypeScript |
+| `epub-jsf-eficaz-as-melhores-praticas-para-o` | Java, JSF |
+| `epub-php-e-laravel-crie-aplicacoes-web-como-um` | PHP, Laravel |
+| `epub-postgresql-banco-de-dados-para-aplicacoes-web` | PostgreSQL |
+| `epub-progressive-web-apps-construa-aplicacoes` | PWA |
+| `epub-sass-aprendendo-pre-processadores-css` | Sass |
+| `epub-vraptor-desenvolvimento-agil-para-web-com-java` | Java, VRaptor |
+| `epub-vuejs-construa-aplicacoes-incriveis` | Vue.js |
+| `epub-web-design-responsivo-paginas-adaptaveis-para` | Design Responsivo |
+| `epub-yesod-e-haskell-aplicacoes-web-com-programacao` | Haskell |
+| `a-logica-do-jogo-recriando-classicos-da-historia-dos-vi` | Jogos |
+| `a-web-mobile-programe-para-um-mundo-de-muitos-dispositi` | Mobile, Desenvolvimento Web |
+| `agile-desenvolvimento-de-software-com-entregas-frequent` | Agile |
+| `ai-engineering-and-the-art-of-building-intelligent-syst` | Engineering, Building, Intelligent |
+| `algoritmos-em-java-busca-ordenacao-e-analise` | Java, Algoritmos |
+| `applied-ai-for-enterprise-java-development-alex-soto-bu` | Java |
+| `aprenda-a-programar-com-python` | Python |
+| `armazenando-dados-com-redis` | Banco de Dados |
+| `automate-the-boring-stuff-with-python-al-sweigart` | Python |
+| `better-python-code` | Python |
+| `casa-do-codigo-epub-android-nativo-com-kotlin-e-mvvm` | Kotlin, Android |
+| `casa-do-codigo-tdd` | Testes |
+| `como-descobrir-quem-esta-do-outro-lado-da-tela-hacking` | Segurança |
+| `data-science-for-healthcare-nitin-singh` | Data Science |
+| `datas-e-horas-conceitos-fundamentais-e-as-apis-do-java` | Java |
+| `desbravando-java-e-orientacao-a-objetos-um-guia-para-o` | Java |
+| `engenharia-de-software-moderna-marco-tulio-valente` | Engenharia de Software |
+| `engenharia-de-software-r-s-pressman-b-r-maxim` | Engenharia de Software |
+| `entendendo-algoritmos-um-guia-ilustra` | Algoritmos |
+| `entrega-continua-em-android-como-automatizar-a-distribu` | Android |
+| `epub-componentes-reutilizaveis-em-java-com-reflexao-e-a` | Java |
+| `epub-cucumber-e-rspec-construa-aplicacoes-ruby-com-test` | Ruby, Testes |
+| `epub-datas-e-horas-conceitos-fundamentais-e-as-apis-do` | Java |
+| `epub-desbravando-java-e-orientacao-a-objetos-um-guia-pa` | Java |
+| `epub-practical-java-8-lambdas-streams-and-new-resources` | Java |
+| `epub-protractor-licoes-sobre-testes-end-to-end-automati` | Testes |
+| `epub-refatorando-com-padroes-de-projeto-um-guia-em-ruby` | Ruby, Padrões de Projeto |
+| `epub-rspec-crie-especificacoes-executaveis-em-ruby` | Ruby, Testes |
+| `epub-selenium-webdriver-descomplicando-testes-automatiz` | Java, Testes |
+| `epub-spock-framework-testes-automatizados-ageis-para-ja` | Java, Testes |
+| `epub-testes-automatizados-de-software-um-guia-pratico` | Testes |
+| `fragmentos-de-um-programador` | Programação |
+| `fundamentals-of-software-engineering` | Engenharia de Software |
+| `guia-do-mestre-programador` | Programação |
+| `image-processing-masterclass-with-python-50-solutions-a` | Python |
+| `implementing-reverse-engineering-jitender-narula` | Engenharia Reversa |
+| `implementing-reverse-engineering-the-real-practice-of-x` | Engenharia Reversa |
+| `introducao-a-programacao-com-python-algoritmos-e-logica` | Python, Algoritmos |
+| `ionic-framework-construa-aplicativos-para-todas-as-plat` | Mobile |
+| `jogos-2d-com-stencyl-crie-jogos-completos-sem-codigos-d` | Jogos |
+| `jornada-python` | Python |
+| `jsf-eficaz-as-melhores-praticas-para-o-desenvolvedor-we` | Java, Java Web |
+| `kotlin-com-android-crie-aplicativos-de-maneira-facil-e` | Kotlin, Android |
+| `lean-game-development-desenvolvimento-enxuto-de-jogos` | Jogos |
+| `learning-generative-ai-tools-for-excel-angelica-lo-duca` | Excel |
+| `low-code-development-with-servicenow-nicola-attico` | Low-Code |
+| `mastering-microsoft-excel-365-the-ultimate-guide-to-nir` | Excel |
+| `mastering-the-it-audit-ramaswamy-jyothi` | Auditoria |
+| `mongodb-construa-novas-aplicacoes-com-novas-tecnologias` | Banco de Dados |
+| `mysql-comece-com-o-principal-banco-de-dados-open-source` | Banco de Dados |
+| `o-programador-pragmatico-de-aprendiz-a-mestre` | Programação |
+| `oauth-20-proteja-suas-aplicacoes-com-o-spring-security` | Segurança |
+| `onsumindo-a-api-do-zabbix-com-python` | Python |
+| `platform-engineering-and-security` | Segurança |
+| `play-framework-java-para-web-sem-servlets-e-com-diversa` | Java, Java Web |
+| `postgresql-banco-de-dados-para-aplicacoes-web-modernas` | Banco de Dados |
+| `powershell-automation-and-scripting-ahmed-uzejnovic` | Automação |
+| `powershell-essential-guide-prashanth-jayaram-rajendra-g` | Automação |
+| `practical-java-8-lambdas-streams-and-new-resources` | Java |
+| `programando-em-google` | Programação |
+| `python` | Python |
+| `python-escreva-seus-primeiros-programas` | Python |
+| `python-for-devops-varghese-chacko` | Python |
+| `python-powered-excel` | Python, Excel |
+| `react-native-desenvolvimento-de-aplicativos-mobile-com` | Mobile |
+| `redes-de-computadores` | Redes |
+| `redes-de-computadores-e-a-internet-uma-abordagem-top-do` | Redes |
+| `refatorando-com-padroes-de-projeto-um-guia-em-ruby` | Ruby, Padrões de Projeto |
+| `seguranca-em-aplicacoes-web` | Segurança, Desenvolvimento Web |
+| `selenium-webdriver-descomplicando-testes-automatizados` | Java, Testes |
+| `series-temporais-com-prophet-analise-e-previsao-de-dado` | Python, Data Science |
+| `sql-crash-course-thomas-liddle` | Banco de Dados |
+| `test-driven-development-with-python-harry-jw-percival` | Python, Testes |
+| `trilhas-python` | Python |
+| `vraptor-desenvolvimento-agil-para-web-com-java` | Java, Java Web |
+| `web-automation-with-playwright-and-python-kailash-patha` | Python, Automação |
+| `aprendendo-node` | Node.js |
+| `aprendendo-node-shelley-powers` | Node.js |
+| `comunicacao-de-dados-e-redes-de-computadores-portuguese` | Redes de Computadores |
+| `enterprise-architects-handbook-a-blueprint-to-design-an` | Enterprise Architecture |
+| `javascript-de-alto-desempenho-nicholas-c-zakas-mary-e-t` | JavaScript Performance |
+| `marketing-de-conteudo-casa-do-codigo` | Marketing de Conteudo |
+| `modern-full-stack-development-frank-w-zammetti` | Full-Stack Development |
+| `mongodb-construa-novas-aplicaco` | MongoDB |
+| `the-ai-engineers-guide-to-surviving-the-eu-ai-act-larys` | EU AI Act |
+| `web-scraping-com-python-ryan-e-mitchell` | Web Scraping |
+| `big-data-tecnicas-e-tecnologias-para-extracao-de-valor` | Big Data |
+| `building-multimodal-generative-ai-and-agentic-app` | Multimodal GenAI |
+| `data-science-crash-course` | Data Science |
+| `elasticsearch-consumindo-dados-real-time-com-elk` | Elasticsearch |
+| `epub-pandas-python` | Pandas/Python |
+| `inteligencia-artificial-e-chatgpt-da-revolucao-dos-modelos` | IA e ChatGPT |
+| `jpa-eficaz-as-melhores-praticas-de-persistencia-de-dados` | JPA/Java |
+| `nosql-como-armazenar-os-dados-de-uma-aplicacao-moderna` | NoSQL |
+| `pandas-python` | Pandas/Python |
+| `pandas-python-data-wrangling-para-ciencia-de-dados` | Pandas/Python |
+| `sistemas-de-banco-de-dados` | Sistemas de Banco de Dados — modelagem, SQL, normalizacao, transacoes, controle de concorrencia |
+

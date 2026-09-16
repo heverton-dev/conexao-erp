@@ -1,0 +1,13 @@
+name: pre-gerar-crud
+description: Valida schema antes de gerar CRUD
+trigger: antes_de_executar: gerar-crud
+actions:
+  - verificar_tabela_existe:
+      mcp: supabase_describe_table
+      args:
+        table_name: $tabela
+      on_error: abort
+
+  - verificar_colunas_minimas:
+      required_columns: ['id', 'created_at']
+      on_error: warn

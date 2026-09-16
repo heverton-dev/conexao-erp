@@ -1,0 +1,20 @@
+name: CRUDService
+description: Template para serviços CRUD do ERP Conexão
+schema:
+  type: object
+  required: [tabela, operacoes]
+  properties:
+    tabela:
+      type: string
+      description: 'Nome da tabela no Supabase'
+    operacoes:
+      type: object
+      required: [listar, buscarPorId, criar, atualizar, excluir]
+      properties:
+        listar:
+          type: object
+          properties:
+            filtros:
+              type: object
+            paginação:
+              type: object

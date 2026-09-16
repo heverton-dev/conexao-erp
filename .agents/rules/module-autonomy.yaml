@@ -1,0 +1,45 @@
+name: module-autonomy
+description: >
+  Garante que módulos em src/features/ sejam auto-contidos e auto-suficientes.
+  Nenhum módulo pode importar internals de outro módulo.
+  O único fio de conexão entre módulos são dados via src/shared/.
+
+rules:
+  - id: no-cross-feature-imports
+    description: Módulos NÃO podem importar de outros módulos em src/features/
+    pattern: "from \"~/features/{outro-modulo}/\""
+    severity: error
+    exception:
+      - "imports do próprio módulo (from \"~/features/meu-modulo/\")"
+      - "features/empresas/index.ts re-exporta de ~/shared/empresas (bridge permitida)"
+
+  - id: use-shared-for-cross-cutting
+    description: Dados usados por múltiplos módulos devem viver em src/shared/
+    examples:
+      allowed:
+        - "import { listarEmpresas } from \"~/shared/empresas\""
+        - "import { formatDate } from \"~/lib/utils/format\""
+        - "import { EmpresaSuperAdminSelector } from \"~/components/shared/EmpresaSuperAdminSelector\""
+      forbidden:
+        - "import { formatDate } from \"~/features/crm/lib/comercial\""
+        - "import { useEmpresaSuperAdmin } from \"~/features/despesas/hooks/useEmpresaSuperAdmin\""
+
+  - id: shared-layer-locations
+    description: Onde colocar código compartilhado
+    mapping:
+      dados_de_plataforma: "src/shared/<nome>/ (index.ts + types.ts + service.ts)"
+      utilitarios_genericos: "src/lib/utils/<nome>.ts"
+      componentes_ui_compartilhados: "src/components/shared/<Componente>.tsx"
+
+  - id: module-template
+    description: Estrutura obrigatória de todo módulo novo
+    structure:
+      - "index.ts (barrel público, opcional)"
+      - "module.ts (registerModule + nav items)"
+      - "permissions.ts (constantes de permissão)"
+      - "types.ts (tipos internos do módulo)"
+      - "components/ (páginas e componentes React)"
+      - "hooks/ (hooks React do próprio módulo)"
+      - "services/ (acesso Supabase das próprias tabelas)"
+
+reference: "erp-conexao/ARCHITECTURE.md"

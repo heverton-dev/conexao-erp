@@ -1,0 +1,48 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { {{MODULO_KEY}}Service } from '../services/{{MODULO_KEY}}.service'
+
+export function use{{MODULO_KEY_PASCAL}}(filtros?: { busca?: string }) {
+  return useQuery({
+    queryKey: ['{{MODULO_KEY}}', filtros],
+    queryFn: () => {{MODULO_KEY}}Service.listar(filtros),
+  })
+}
+
+export function use{{MODULO_KEY_PASCAL}}PorId(id: string) {
+  return useQuery({
+    queryKey: ['{{MODULO_KEY}}', id],
+    queryFn: () => {{MODULO_KEY}}Service.buscarPorId(id),
+    enabled: !!id,
+  })
+}
+
+export function useCriar{{MODULO_KEY_PASCAL}}() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: {{MODULO_KEY}}Service.criar,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['{{MODULO_KEY}}'] })
+    },
+  })
+}
+
+export function useAtualizar{{MODULO_KEY_PASCAL}}() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, dados }: { id: string; dados: unknown }) =>
+      {{MODULO_KEY}}Service.atualizar(id, dados),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['{{MODULO_KEY}}'] })
+    },
+  })
+}
+
+export function useExcluir{{MODULO_KEY_PASCAL}}() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: {{MODULO_KEY}}Service.excluir,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['{{MODULO_KEY}}'] })
+    },
+  })
+}

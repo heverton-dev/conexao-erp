@@ -1,0 +1,66 @@
+import { supabase } from '~/core/supabase/client'
+import { z } from 'zod'
+
+const schemaCriar = z.object({
+  nome: z.string().min(3).max(100),
+})
+
+const schemaAtualizar = schemaCriar.partial()
+
+export const {{MODULO_KEY}}Service = {
+  async listar(filtros?: { busca?: string }, pagina = 1, porPagina = 20) {
+    let query = supabase
+      .from('{{TABELA}}')
+      .select('*', { count: 'exact' })
+      .range((pagina - 1) * porPagina, pagina * porPagina - 1)
+
+    if (filtros?.busca) {
+      query = query.ilike('nome', `%${filtros.busca}%`)
+    }
+
+    const { data, error, count } = await query
+    if (error) throw error
+    return { data, total: count }
+  },
+
+  async buscarPorId(id: string) {
+    const { data, error } = await supabase
+      .from('{{TABELA}}')
+      .select('*')
+      .eq('id', id)
+      .single()
+    if (error) throw error
+    return data
+  },
+
+  async criar(dados: unknown) {
+    const validados = schemaCriar.parse(dados)
+    const { data, error } = await supabase
+      .from('{{TABELA}}')
+      .insert(validados)
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  },
+
+  async atualizar(id: string, dados: unknown) {
+    const validados = schemaAtualizar.parse(dados)
+    const { data, error } = await supabase
+      .from('{{TABELA}}')
+      .update(validados)
+      .eq('id', id)
+      .select()
+      .single()
+    if (error) throw error
+    return data
+  },
+
+  async excluir(id: string) {
+    const { error } = await supabase
+      .from('{{TABELA}}')
+      .delete()
+      .eq('id', id)
+    if (error) throw error
+  },
+}

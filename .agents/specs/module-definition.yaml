@@ -1,0 +1,41 @@
+name: ModuleDefinition
+description: Template para definição de módulos do ERP Conexão
+schema:
+  type: object
+  required: [key, nome, descrição, icon, rotas, permissões, ambientes]
+  properties:
+    key:
+      type: string
+      pattern: '^[a-z0-9-]+$'
+      description: 'Chave única do módulo (kebab-case)'
+    nome:
+      type: string
+      minLength: 3
+      maxLength: 50
+      description: 'Nome display do módulo'
+    descrição:
+      type: string
+      minLength: 10
+      maxLength: 200
+      description: 'Descrição curta do módulo'
+    icon:
+      type: string
+      description: 'Nome do ícone Lucide React'
+    rotas:
+      type: array
+      items:
+        type: string
+        pattern: '^/[a-z0-9-/]+$'
+      minItems: 1
+    permissões:
+      type: array
+      items:
+        type: string
+        pattern: '^[a-z_]+$'
+      minItems: 1
+    ambientes:
+      type: array
+      items:
+        type: string
+        enum: ['cadastro', 'consultor', 'tecnologia', 'suporte']
+      minItems: 1
